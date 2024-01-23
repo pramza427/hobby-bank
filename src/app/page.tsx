@@ -2,47 +2,38 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { useStopwatch } from 'react-timer-hook';
+import { Tooltip } from 'react-tooltip';
 
-var hobbies = [
-    {
-        title: 'Woodworking', defaultPrice: 6.5, id: 1,
-        projects: [
-            { title: 'Jewely Box', price: 7, id: 12, parentID: 1, time: 650, timing: false },
-            { title: 'Ruler Stand', price: 2, id: 14, parentID: 1, time: 300, timing: false },
-            { title: 'Mask', price: 6.5, id: 15, parentID: 1, time: 8400, timing: false }
-        ]
-    },
-    {
-        title: 'Quilting', defaultPrice: 8.5, id: 2,
-        projects: [
-            {
-                title: 'Void', price: 7, id: 16, parentID: 2, time: 650, timing: false
+function convertTime(days: number, hours: number, minutes: number, seconds: number) {
+    var d = days < 10 ? "0" + days : days;
+    var h = hours < 10 ? "0" + hours : hours;
+    var m = minutes < 10 ? "0" + minutes : minutes;
+    var s = seconds < 10 ? "0" + seconds : seconds
+    return d + ":" + h + ":" + m + ":" + s
+}
 
-            },
-            { title: 'Koozies', price: 2, id: 17, parentID: 2, time: 300, timing: false },
-            { title: '3D Large', price: 6.5, id: 18, parentID: 2, time: 94300, timing: false }
-        ]
-    }
-];
+function convertTotalTime(totalTime: number) {
+    var days = Math.floor(totalTime / 86400)
+    var hours = Math.floor(totalTime / 3600)
+    var minutes = Math.floor(totalTime % 3600 / 60)
+    var seconds = Math.floor(totalTime % 60)
+    return convertTime(days, hours, minutes, seconds)
+}
 
 export default function Home() {
     
     const [currentHobbie, setCurrentHobbie] = useState(1);
     const [currentProject, setCurrentProject] = useState(12);
+    const [hobbies, setHobbies] = useState([]);
 
     function getCurrentHobbie() {
         return hobbies.find(hobbie => hobbie.id == currentHobbie)
     }
 
-    function getCurrentProject() {
-        var hobbie = getCurrentHobbie();
-        return hobbie?.projects?.find(project => project.id == currentProject)
-    }
-
     return (
         <main className="debug flex min-h-screen text-lg">
-            <HobbieList currentHobbie={currentHobbie} setCurrentHobbie={setCurrentHobbie} get={getCurrentHobbie} />
-            <ProjectList currentProject={currentProject} setCurrentProject={setCurrentProject} getHobbie={getCurrentHobbie}  />
+            <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbie={currentHobbie} setCurrentHobbie={setCurrentHobbie} get={getCurrentHobbie} />
+            <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProject={currentProject} setCurrentProject={setCurrentProject} getHobbie={getCurrentHobbie}  />
 
         </main>
     )
@@ -53,20 +44,20 @@ function HobbieButton({ currentHobbie, setCurrentHobbie, hobbie }) {
         setCurrentHobbie(hobbie.id)
     }
     const totalTime = hobbie.projects.reduce((total, project) => total + project.time, 0)
-    const isSelected = (currentHobbie == hobbie.id) ? "bg-blue-800" : ""
+    const isSelected = (currentHobbie == hobbie.id) ? " bg-midnight " : " hover:bg-metal "
     return (
-        <div className={"text-gray-400 rounded-lg border-gray-600 rounded hover:bg-blue-950 hover:cursor-pointer " + isSelected}
+        <div className={"p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
-            {hobbie.title}
-            {totalTime}
+            <div>{hobbie.title}</div>
+            <div className="text-right">{convertTotalTime(totalTime)}</div>
         </div>
     )
 }
 
-function HobbieList({currentHobbie, setCurrentHobbie, get}) { 
+function HobbieList({allHobbies, setHobbies, currentHobbie, setCurrentHobbie, get}) { 
     let hobbieList;
-    if (get() != null) {
-        hobbieList = hobbies.map(hobbie =>
+    if (allHobbies.length != 0) {
+        hobbieList = allHobbies.map(hobbie =>
             <div
                 key={hobbie.id}>
                 <HobbieButton currentHobbie={currentHobbie} setCurrentHobbie={setCurrentHobbie} hobbie={hobbie} />
@@ -75,30 +66,50 @@ function HobbieList({currentHobbie, setCurrentHobbie, get}) {
     else {
         <div/>
     }
-    
+    function getHobbiesFromLocal() {
+        setHobbies(JSON.parse(window.localStorage.getItem("hobbies")) ?? [])
+    }
+
     return (
-        <div className="w-1/4 debug p-2 m-2 border border-gray-300">
-            <div className="text-center">
+        <div className="w-1/4 debug p-2 m-2 border border-gray-300 flex flex-col">
+            <div className="text-center hover:bg-metal hover:cursor-pointer"
+                onClick={() => console.log("add Hobbie") }>
                 Add a Hobbie
             </div>
             <div className="flex flex-col">
                 {hobbieList}
             </div>
+            <div className="flex-grow"></div>
+            <div className="hover:cursor-pointer hover:bg-midnight flex justify-between z-1"
+                onClick={getHobbiesFromLocal}>
+                Load from Local
+                <div className="z-100 px-4" id="local-warning">             
+                    i
+                </div>
+                <Tooltip anchorSelect="#local-warning">
+                    <div className="z-50">
+                        Saving to local can lead to lost data when clearing chache
+                    </div> 
+                </Tooltip>
+            </div>
         </div>
     )
 }
 
-function convertTime(days: number, hours: number, minutes: number, seconds:number) {
-    return days + " days " + hours + " hrs " + minutes + " mins " + seconds
-}
-
-function ProjectDetails({ project, isRunning, startTiming, stopTiming }) {
+function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds }) {
 
     function toggleExpenses() {
         setExpenses(!showExpenses)
     }
     function toggleTimer() {
-        isRunning ? stopTiming() : startTiming();
+        if (isRunning) {
+            stopTiming();
+            project.time = totalSeconds;
+            window.localStorage.setItem("hobbies", JSON.stringify(allHobbies));
+        }
+        else {
+            startTiming();
+        }
     }
     var timerText = isRunning ? "Stop Timer" : "Start Timer"
     return (
@@ -116,7 +127,9 @@ function ProjectDetails({ project, isRunning, startTiming, stopTiming }) {
     )
 }
 
-function ProjectItem({ setCurrentProject, project, currentProject }) {
+function ProjectItem({ allHobbies, setCurrentProject, project, currentProject }) {
+    const stopwatchOffset = new Date();
+    stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + project.time ?? 0)
     const {
         totalSeconds,
         seconds,
@@ -127,7 +140,8 @@ function ProjectItem({ setCurrentProject, project, currentProject }) {
         start,
         pause,
         reset,
-    } = useStopwatch({ autoStart: false, stopwatchOffset: 36000 });
+    } = useStopwatch({ autoStart: false, offsetTimestamp: stopwatchOffset });
+
     const [openExpenses, setOpenExpenses] = useState(0);
     
     
@@ -139,7 +153,7 @@ function ProjectItem({ setCurrentProject, project, currentProject }) {
     let lowerSection;
     let timingClass = "";
     if (isCurrentProject) {
-        lowerSection = <ProjectDetails project={project} isRunning={isRunning} startTiming={start} stopTiming={pause}/>
+        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} />
         selectedClass = "bg-midnight "
     }
     else {
@@ -163,7 +177,7 @@ function ProjectItem({ setCurrentProject, project, currentProject }) {
     )
 }
 
-function ProjectList({ currentProject, setCurrentProject, getHobbie }) {
+function ProjectList({ allHobbies, currentProject, setCurrentProject, getHobbie }) {
     const currentHobbie = getHobbie();
     let projectList;
     if (currentHobbie != null) {
@@ -172,7 +186,7 @@ function ProjectList({ currentProject, setCurrentProject, getHobbie }) {
                 key={project.id}
                 className=""
             >
-                <ProjectItem setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} />
+                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} />
             </div>)
     }
     else {
@@ -183,15 +197,18 @@ function ProjectList({ currentProject, setCurrentProject, getHobbie }) {
         <div className="debug relative w-full m-2">
             <div className="flex justify-center">
                 <div className="text-2xl p-3"> Projects </div>
-                <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"> New Project +</div>
+                <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"
+                    onClick={addProject }>
+                    New Project +
+                </div>
             </div>
             
             <div>
-                <div className="p-2 grid grid-cols-4">
+                <div className="p-2 grid grid-cols-4 border-b">
                     <div className="">Name</div>
                     <div className="text-right">Rate</div>
                     <div className="text-right">Time</div>
-                    <div className="text-right">Total Earned</div>
+                    <div className="text-right">Bank</div>
                 </div>
                 {projectList}
             </div>
@@ -199,6 +216,9 @@ function ProjectList({ currentProject, setCurrentProject, getHobbie }) {
     )
 }
 
+function addProject() {
+
+}
 
 function Expense() {
 
