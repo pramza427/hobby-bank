@@ -169,7 +169,7 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
     )
 }
 
-function ProjectItem({ allHobbies, setCurrentProject, project, currentProject }) {
+function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject }) {
     const stopwatchOffset = new Date();
     stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + project.time ?? 0)
     const {
@@ -201,8 +201,13 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject })
         reset(stopwatchOffset, false);
         project.time = newTime;
     }
-    function deleteProject() {
 
+    function deleteProjectView() {
+        deleteProject(project.id);
+        setEditing(false);
+        var elem = document.getElementById(project.id);
+        console.log(elem);
+        elem?.remove();
     }
     const handleFocus = (event:any) => event.target.select();
 
@@ -242,7 +247,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject })
                         <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
                     </div>
                     <div className="flex justify-center">
-                        <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProject}>
+                        <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
                             Delete
                         </button>
                         <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
@@ -279,16 +284,20 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
     function toggleAddingProject() {
         setAddingProject(!addingProject);
     }
-
+    
     const currentHobbie = getHobbie();
+    function deleteProject(id) {
+        currentHobbie.projects = currentHobbie.projects.filter(project => project.id != id)
+    }
     let projectList;
     if (currentHobbie != null) {
         projectList = currentHobbie.projects.map(project =>
             <div
                 key={project.id}
+                id={project.id}
                 className=""
             >
-                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} />
+                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} deleteProject={deleteProject} />
             </div>)
     }
     else {
