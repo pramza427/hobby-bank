@@ -1,4 +1,5 @@
 'use client'
+import { randomInt } from 'crypto';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useStopwatch } from 'react-timer-hook';
@@ -14,7 +15,7 @@ function convertTime(days: number, hours: number, minutes: number, seconds: numb
 
 function convertTotalTime(totalTime: number) {
     var days = Math.floor(totalTime / 86400)
-    var hours = Math.floor(totalTime / 3600)
+    var hours = Math.floor(totalTime / 3600 % 24)
     var minutes = Math.floor(totalTime % 3600 / 60)
     var seconds = Math.floor(totalTime % 60)
     return convertTime(days, hours, minutes, seconds)
@@ -48,7 +49,7 @@ function HobbieButton({ currentHobbie, setCurrentHobbie, hobbie }) {
     return (
         <div className={"p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
-            <div>{hobbie.title}</div>
+            <div>{hobbie.title}</div> 
             <div className="text-right">{convertTotalTime(totalTime)}</div>
         </div>
     )
@@ -177,7 +178,12 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject })
     )
 }
 
-function ProjectList({ allHobbies, currentProject, setCurrentProject, getHobbie }) {
+function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject, getHobbie }) {
+    const [addingProject, setAddingProject] = useState(false);
+    function toggleAddingProject() {
+        setAddingProject(!addingProject);
+    }
+
     const currentHobbie = getHobbie();
     let projectList;
     if (currentHobbie != null) {
@@ -192,17 +198,19 @@ function ProjectList({ allHobbies, currentProject, setCurrentProject, getHobbie 
     else {
         <div className="debug" />
     }
+
+    let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbie={currentHobbie} allHobbies={allHobbies}  setHobbies={setHobbies} /> : <div/>
     
     return (
         <div className="debug relative w-full m-2">
             <div className="flex justify-center">
                 <div className="text-2xl p-3"> Projects </div>
                 <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"
-                    onClick={addProject }>
+                    onClick={toggleAddingProject}>
                     New Project +
                 </div>
             </div>
-            
+            {projectForm}
             <div>
                 <div className="p-2 grid grid-cols-4 border-b">
                     <div className="">Name</div>
@@ -216,8 +224,49 @@ function ProjectList({ allHobbies, currentProject, setCurrentProject, getHobbie 
     )
 }
 
-function addProject() {
-
+function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies}) {
+    function submitNewProject(formData: object) {
+        let newProject = {
+            title: formData.get("name"),
+            price: parseInt(formData.get("rate")),
+            id: Math.floor(Math.random()*1000),
+            parentID: currentHobbie.id,
+            time: parseInt(formData.get("seconds")),
+            expenses: []
+        }
+        currentHobbie.projects.push(newProject)
+        setHobbies(allHobbies)
+        toggleAddingProject()
+    }
+    return (
+        <div className="absolute z-50 top-0 w-full h-full bg-opacity-90 bg-slate-950 "
+        //onClick={toggleAddingProject }
+        >
+            <form action={submitNewProject}>
+                <div>
+                    <div>
+                        Name of Project
+                    </div>
+                    <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
+                </div>
+                <div>
+                    <div>
+                        $/hr
+                    </div>
+                    <input className="bg-slate-800 border border-gray-700" type="number" name="rate"></input>
+                </div>
+                <div>
+                    <div>
+                    Total time
+                    </div>
+                    <input className="bg-slate-800 border border-gray-700" type="number" name="seconds"></input>
+                </div>
+                
+                <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingProject} >Cancel</button>
+                <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
+            </form>
+        </div>
+    )
 }
 
 function Expense() {
