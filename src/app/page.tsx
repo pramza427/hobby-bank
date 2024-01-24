@@ -135,7 +135,7 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
     )
 }
 
-function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds }) {
+function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing }) {
 
     function toggleExpenses() {
         setExpenses(!showExpenses)
@@ -153,7 +153,10 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
     var timerText = isRunning ? "Stop Timer" : "Start Timer"
     return (
         <div className="relative flex justify-center">
-            <div className="absolute left-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal">Edit</div>
+            <div className="absolute left-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                onClick={() => setEditing(true) }>
+                Edit
+            </div>
             <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
                 onClick={toggleTimer}>
                 {timerText}
@@ -181,39 +184,94 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject })
         reset,
     } = useStopwatch({ autoStart: false, offsetTimestamp: stopwatchOffset });
 
+    const [editing, setEditing] = useState(false);
     const [openExpenses, setOpenExpenses] = useState(0);
     
     
     function setProject() {
         setCurrentProject(project.id)
     }
+    function editProject(formData) {
+        setEditing(false);
+        project.title = formData.get("title") ?? project.title;
+        project.price = parseFloat(formData.get("rate")) ?? project.price;
+        var newTime = parseInt(formData.get("days")) * 86400 + parseInt(formData.get("hours")) * 3600 + parseInt(formData.get("minutes")) * 60 + parseInt(formData.get("seconds"))
+        const stopwatchOffset = new Date();
+        stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + newTime ?? 0)
+        reset(stopwatchOffset, false);
+        project.time = newTime;
+    }
+    function deleteProject() {
+
+    }
+    const handleFocus = (event:any) => event.target.select();
+
     const isCurrentProject = project.id == currentProject;
     let selectedClass;
     let lowerSection;
     let timingClass = "";
     if (isCurrentProject) {
-        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} />
+        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} />
         selectedClass = "bg-midnight "
     }
     else {
         lowerSection = <div></div>
         selectedClass = "hover:bg-metal "
     }
-    { isRunning ? timingClass = " timing " : ""}
+    { isRunning ? timingClass = " timing " : "" }
 
-    return (
-        <div className={"p-2 hover:cursor-pointer " + selectedClass + timingClass}
-            onClick={setProject}>
-            <div className="grid grid-cols-4">
-                <div className="">{project.title}</div>
-                <div className="text-right">{parseFloat(project.price).toFixed(2)}</div>
-                <div className="text-right">{convertTime(days, hours, minutes, seconds)}</div>
-                <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
+    if (editing) {
+        return (
+            <div className="p-2 bg-midnight">
+                <form action={editProject}>
+                    <div className="grid grid-cols-4">
+                        <input className="bg-slate-800 border border-gray-700" name="title" defaultValue={project.title} onClick={handleFocus}></input>
+                        <div className="flex justify-end">
+                            $
+                            <input className="bg-slate-800 border border-gray-700 text-right w-16" name="rate" defaultValue={parseFloat(project.price).toFixed(2)} onClick={handleFocus}></input>
+                        </div>
+                        <div className="flex justify-end">
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="days" defaultValue={parseInt(days)} onClick={handleFocus}></input>
+                            :
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="hours" defaultValue={parseInt(hours)} onClick={handleFocus}></input>
+                            :
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="minutes" defaultValue={parseInt(minutes)} onClick={handleFocus}></input>
+                            :
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds" defaultValue={parseInt(seconds)} onClick={handleFocus}></input>
+                        </div>
+                        <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
+                    </div>
+                    <div className="flex justify-center">
+                        <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProject}>
+                            Delete
+                        </button>
+                        <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
+                            Done
+                        </button>
+                        <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={() => setEditing(false)}>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+                
             </div>
-            {lowerSection}
-        </div>
-        
-    )
+        )
+    }
+    else {
+        return (
+            <div className={"p-2 hover:cursor-pointer " + selectedClass + timingClass}
+                onClick={setProject}>
+                <div className="grid grid-cols-4">
+                    <div className="">{project.title}</div>
+                    <div className="text-right">${parseFloat(project.price).toFixed(2)}</div>
+                    <div className="text-right">{convertTime(days, hours, minutes, seconds)}</div>
+                    <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
+                </div>
+                {lowerSection}
+            </div>
+
+        )
+    }
 }
 
 function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject, getHobbie }) {
@@ -266,7 +324,7 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
     function submitNewProject(formData: object) {
         let newProject = {
             title: formData.get("name"),
-            price: parseInt(formData.get("rate")),
+            price: parseFloat(formData.get("rate")),
             id: Math.floor(Math.random()*1000),
             parentID: currentHobbie.id,
             time: parseInt(formData.get("seconds")),
@@ -291,7 +349,7 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
                     <div>
                         $/hr
                     </div>
-                    <input className="bg-slate-800 border border-gray-700" type="number" name="rate"></input>
+                    <input className="bg-slate-800 border border-gray-700" type="number" step="0.01"  name="rate"></input>
                 </div>
                 <div>
                     <div>
