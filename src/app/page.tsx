@@ -55,7 +55,11 @@ function HobbieButton({ currentHobbie, setCurrentHobbie, hobbie }) {
     )
 }
 
-function HobbieList({allHobbies, setHobbies, currentHobbie, setCurrentHobbie, get}) { 
+function HobbieList({ allHobbies, setHobbies, currentHobbie, setCurrentHobbie, get }) { 
+    const [addingHobbie, setAddingHobbie] = useState(false);
+    function toggleAddingHobbie() {
+        setAddingHobbie(!addingHobbie);
+    }
     let hobbieList;
     if (allHobbies.length != 0) {
         hobbieList = allHobbies.map(hobbie =>
@@ -71,12 +75,15 @@ function HobbieList({allHobbies, setHobbies, currentHobbie, setCurrentHobbie, ge
         setHobbies(JSON.parse(window.localStorage.getItem("hobbies")) ?? [])
     }
 
+    let hobbieForm = addingHobbie ? <AddHobbie toggleAddingHobbie={toggleAddingHobbie} currentHobbie={currentHobbie} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
+
     return (
         <div className="w-1/4 debug p-2 m-2 border border-gray-300 flex flex-col">
             <div className="text-center hover:bg-metal hover:cursor-pointer"
-                onClick={() => console.log("add Hobbie") }>
+                onClick={toggleAddingHobbie}>
                 Add a Hobbie
             </div>
+            {hobbieForm}
             <div className="flex flex-col">
                 {hobbieList}
             </div>
@@ -93,6 +100,37 @@ function HobbieList({allHobbies, setHobbies, currentHobbie, setCurrentHobbie, ge
                     </div> 
                 </Tooltip>
             </div>
+        </div>
+    )
+}
+
+function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }) {
+    function submitNewHobbie(formData: object) {
+        let newHobbie = {
+            title: formData.get("name"),
+            id: Math.floor(Math.random() * 1000),
+            projects: []
+        }
+        allHobbies.push(newHobbie)
+        setHobbies(allHobbies)
+        toggleAddingHobbie()
+    }
+
+    return (
+        <div className="absolute z-50 top-0 left-0 w-full h-full bg-opacity-90 bg-slate-950 "
+        //onClick={toggleAddingProject }
+        >
+            <form action={submitNewHobbie}>
+                <div>
+                    <div>
+                        Name of Hobbie
+                    </div>
+                    <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
+                </div>
+
+                <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
+                <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
+            </form>
         </div>
     )
 }
