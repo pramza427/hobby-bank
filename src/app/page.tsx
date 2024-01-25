@@ -118,27 +118,31 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
 
     return (
         <div className="absolute z-50 top-0 left-0 w-full h-full bg-opacity-90 bg-slate-950 "
-        //onClick={toggleAddingProject }
+        onClick={toggleAddingHobbie }
         >
-            <form action={submitNewHobbie}>
-                <div>
+            <div onClick={event => event.stopPropagation()}
+                className="p-2 m-3 inline-block bg-metal border border-gray-800 rounded">
+                <form action={submitNewHobbie}>
                     <div>
-                        Name of Hobbie
+                        <div>
+                            Name of Hobbie
+                        </div>
+                        <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
                     </div>
-                    <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
-                </div>
 
-                <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
-                <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
-            </form>
+                    <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
+                    <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
+                </form>
+            </div>
+            
         </div>
     )
 }
 
-function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing }) {
+function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, setShowExpenses }) {
 
     function toggleExpenses() {
-        setExpenses(!showExpenses)
+        setShowExpenses(true)
     }
     function toggleTimer() {
         if (isRunning) {
@@ -169,7 +173,7 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
     )
 }
 
-function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject }) {
+function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject, setShowExpenses }) {
     const stopwatchOffset = new Date();
     stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + project.time ?? 0)
     const {
@@ -184,12 +188,10 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
         reset,
     } = useStopwatch({ autoStart: false, offsetTimestamp: stopwatchOffset });
 
-    const [editing, setEditing] = useState(false);
-    const [openExpenses, setOpenExpenses] = useState(0);
-    
+    const [editing, setEditing] = useState(false);    
     
     function setProject() {
-        setCurrentProject(project.id)
+        setCurrentProject(project.id);
     }
     function editProject(formData) {
         setEditing(false);
@@ -204,10 +206,13 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
 
     function deleteProjectView() {
         deleteProject(project.id);
-        setEditing(false);
+        
         var elem = document.getElementById(project.id);
+        var listElem = document.getElementById("projectList")
+        project = {};
         console.log(elem);
-        elem?.remove();
+        setEditing(false);
+        //listElem?.removeChild(elem);
     }
     const handleFocus = (event:any) => event.target.select();
 
@@ -216,7 +221,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
     let lowerSection;
     let timingClass = "";
     if (isCurrentProject) {
-        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} />
+        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} setShowExpenses={setShowExpenses} />
         selectedClass = "bg-midnight "
     }
     else {
@@ -281,6 +286,8 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
 
 function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject, getHobbie }) {
     const [addingProject, setAddingProject] = useState(false);
+    const [showExpenses, setShowExpenses] = useState(false);
+
     function toggleAddingProject() {
         setAddingProject(!addingProject);
     }
@@ -297,35 +304,39 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
                 id={project.id}
                 className=""
             >
-                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} deleteProject={deleteProject} />
+                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} deleteProject={deleteProject} setShowExpenses={setShowExpenses} />
             </div>)
     }
     else {
         <div className="debug" />
     }
 
-    let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbie={currentHobbie} allHobbies={allHobbies}  setHobbies={setHobbies} /> : <div/>
-    
+    let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbie={currentHobbie} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
+    let expenseList = showExpenses ? <ExpenseList currentHobbie={currentHobbie} currentProject={currentProject}/> : <div />
     return (
-        <div className="debug relative w-full m-2">
-            <div className="flex justify-center">
-                <div className="text-2xl p-3"> Projects </div>
-                <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"
-                    onClick={toggleAddingProject}>
-                    New Project +
+        <div className="flex w-full">
+            <div className="debug relative w-full m-2">
+                <div className="flex justify-center">
+                    <div className="text-2xl p-3"> Projects </div>
+                    <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"
+                        onClick={toggleAddingProject}>
+                        New Project +
+                    </div>
+                </div>
+                {projectForm}
+                <div id="projectList">
+                    <div className="p-2 grid grid-cols-4 border-b">
+                        <div className="">Name</div>
+                        <div className="text-right">Rate</div>
+                        <div className="text-right">Time</div>
+                        <div className="text-right">Bank</div>
+                    </div>
+                    {projectList}
                 </div>
             </div>
-            {projectForm}
-            <div>
-                <div className="p-2 grid grid-cols-4 border-b">
-                    <div className="">Name</div>
-                    <div className="text-right">Rate</div>
-                    <div className="text-right">Time</div>
-                    <div className="text-right">Bank</div>
-                </div>
-                {projectList}
-            </div>
+            {expenseList}
         </div>
+        
     )
 }
 
@@ -374,12 +385,75 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
     )
 }
 
-function Expense() {
+function ExpenseForm({ addingExpense, setAddingExpense, project }) {
+    function submitNewExpense(formData: object) {
+        let newExpense = {
+            title: formData.get("item"),
+            cost: parseFloat(formData.get("cost")),
+            id: Math.floor(Math.random() * 1000),
+            parentID: project.id
+        }
+        if (project.expenses == null) {
+            project.expenses = [newExpense]
+        }
+        else {
+            project.expenses.unshift(newExpense)
+        }
+        setAddingExpense(false)
+    }
 
+    if (addingExpense) {
+        return (
+            <form action={submitNewExpense}>
+                <div className="grid grid-cols-2">
+                    <div>
+                        <div>Item</div>
+                        <input name="item" className="w-40 bg-slate-800 border border-gray-700"></input>
+                    </div>
+                    <div className="text-right">
+                        <div>Cost</div>
+                        <input name="cost" className="w-16 bg-slate-800 border border-gray-700"></input>
+                    </div>
+                    <button className="m-3 p-1 hover:bg-metal" onClick={() => setAddingExpense(false)}>Cancel</button>
+                    <button className="m-3 p-1 hover:bg-metal" type="submit">Add</button>
+                </div>
+            </form >
+        )
+    }
+    else {
+        return (<div className="debug" />)
+    }
+    
 }
 
-function ExpenseList() {
+function ExpenseList({ currentHobbie, currentProject }) {
+    const [addingExpense, setAddingExpense] = useState(false);
+    const project = currentHobbie.projects.find(project => project.id == currentProject)
+    const expenses = project.expenses;
 
+
+    const expensesList = expenses?.map(expense =>
+        <div className="flex justify-between" key={expense.key}>
+            <div>
+                {expense.title}
+            </div>  
+            <div>
+                ${parseFloat(expense.cost).toFixed(2)}
+            </div>
+        </div>
+    )
+
+    return (
+        <div className="w-1/3 p-2 m-2 debug">
+            <div className="p-2 hover:bg-metal hover:cursor-pointer text-center"
+                onClick={() => setAddingExpense(true)}>
+                Add an Expense
+            </div>
+            <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
+            {expensesList}
+            
+        </div>
+    )
 }
 
 
