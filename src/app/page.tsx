@@ -21,6 +21,18 @@ function convertTotalTime(totalTime: number) {
     return convertTime(days, hours, minutes, seconds)
 }
 
+function calculateTotalExpenses(project: object) {
+    var expensesCost = project?.expenses?.reduce((total, expense) => total + expense.cost, 0);
+    return expensesCost = expensesCost ?? 0;
+}
+
+function calculateBankAfterExpenses(project: object) {
+    var rateTime = project.time / 3600 * project.price
+    var expensesCost = calculateTotalExpenses(project);
+
+    return (rateTime - expensesCost).toFixed(2)
+}
+
 export default function Home() {
     
     const [currentHobbie, setCurrentHobbie] = useState(1);
@@ -444,17 +456,33 @@ function ExpenseList({ currentHobbie, currentProject }) {
     )
 
     return (
-        <div className="w-1/3 p-2 m-2 debug">
+        <div className="w-1/3 p-2 m-2 debug flex flex-col">
             <div className="p-2 hover:bg-metal hover:cursor-pointer text-center"
                 onClick={() => setAddingExpense(true)}>
                 Add an Expense
             </div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
-            {expensesList}
-            
+            <div className="flex-grow">
+                {expensesList}
+            </div>
+            <div className="pt-2 border-t border-gray-800">
+                <div className="flex justify-between">
+                    <div>Total Banked:</div>
+                    <div>{"$" + (project.time / 3600 * project.price).toFixed(2)}</div>
+                </div>
+                <div className="flex justify-between">
+                    <div>Total Expenses:</div>
+                    <div>{"$" + calculateTotalExpenses(project).toFixed(2)}</div>
+                </div>
+                <div className="flex justify-between">
+                    <div>Remaining Banked:</div>
+                    <div>{"$" + calculateBankAfterExpenses(project)}</div>
+                </div>
+            </div>
         </div>
     )
 }
+
 
 
 
