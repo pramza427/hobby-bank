@@ -91,7 +91,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbie, setCurrentHobbie, g
 
     return (
         <div className="w-1/4 debug p-2 m-2 border border-gray-300 flex flex-col">
-            <div className="text-center hover:bg-metal hover:cursor-pointer"
+            <div className="p-2 rounded text-center hover:bg-metal hover:cursor-pointer"
                 onClick={toggleAddingHobbie}>
                 Add a Hobbie
             </div>
@@ -123,17 +123,17 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
             id: Math.floor(Math.random() * 1000),
             projects: []
         }
-        allHobbies.push(newHobbie)
+        allHobbies.unshift(newHobbie)
         setHobbies(allHobbies)
         toggleAddingHobbie()
     }
 
     return (
-        <div className="absolute z-50 top-0 left-0 w-full h-full bg-opacity-90 bg-slate-950 "
+        <div className="bg-opacity-90 bg-slate-950 "
         onClick={toggleAddingHobbie }
         >
             <div onClick={event => event.stopPropagation()}
-                className="p-2 m-3 inline-block bg-metal border border-gray-800 rounded">
+                className="p-2 inline-block border border-gray-800 rounded">
                 <form action={submitNewHobbie}>
                     <div>
                         <div>
@@ -142,8 +142,8 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
                         <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
                     </div>
 
-                    <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
-                    <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
+                    <button type="button" className="m-3 p-1 rounded hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
+                    <button type="submit" className="m-3 p-1 rounded hover:bg-metal">Confirm</button>
                 </form>
             </div>
             
@@ -302,6 +302,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
 
     function toggleAddingProject() {
         setAddingProject(!addingProject);
+        setCurrentProject(null);
     }
     
     const currentHobbie = getHobbie();
@@ -320,7 +321,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
             </div>)
     }
     else {
-        <div className="debug" />
+        <div/>
     }
 
     let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbie={currentHobbie} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
@@ -335,7 +336,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
                         New Project +
                     </div>
                 </div>
-                {projectForm}
+                
                 <div id="projectList">
                     <div className="p-2 grid grid-cols-4 border-b">
                         <div className="">Name</div>
@@ -343,6 +344,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
                         <div className="text-right">Time</div>
                         <div className="text-right">Bank</div>
                     </div>
+                    {projectForm}
                     {projectList}
                 </div>
             </div>
@@ -355,7 +357,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
 function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies}) {
     function submitNewProject(formData: object) {
         let newProject = {
-            title: formData.get("name"),
+            title: formData.get("title"),
             price: parseFloat(formData.get("rate")),
             id: Math.floor(Math.random()*1000),
             parentID: currentHobbie.id,
@@ -367,32 +369,36 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
         toggleAddingProject()
     }
     return (
-        <div className="absolute z-50 top-0 w-full h-full bg-opacity-90 bg-slate-950 "
-        //onClick={toggleAddingProject }
-        >
+        <div className="p-2 bg-midnight">
             <form action={submitNewProject}>
-                <div>
-                    <div>
-                        Name of Project
+                <div className="grid grid-cols-4">
+                    <input className="bg-slate-800 border border-gray-700" name="title"></input>
+                    <div className="flex justify-end">
+                        $
+                        <input className="bg-slate-800 border border-gray-700 text-right w-16" name="rate" ></input>
                     </div>
-                    <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
-                </div>
-                <div>
-                    <div>
-                        $/hr
+                    <div className="flex justify-end">
+                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="days"></input>
+                        :
+                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="hours"></input>
+                        :
+                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="minutes"></input>
+                        :
+                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds"></input>
                     </div>
-                    <input className="bg-slate-800 border border-gray-700" type="number" step="0.01"  name="rate"></input>
+                    <div></div>
                 </div>
-                <div>
-                    <div>
-                    Total time
-                    </div>
-                    <input className="bg-slate-800 border border-gray-700" type="number" name="seconds"></input>
+                <div className="flex justify-center">
+                    <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={toggleAddingProject}>
+                        Cancel
+                    </button>
+                    <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
+                        Add
+                    </button>
+                    
                 </div>
-                
-                <button type="button" className="m-3 p-1 hover:bg-metal" onClick={toggleAddingProject} >Cancel</button>
-                <button type="submit" className="m-3 p-1 hover:bg-metal">Confirm</button>
             </form>
+
         </div>
     )
 }
@@ -433,7 +439,7 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
         )
     }
     else {
-        return (<div className="debug" />)
+        return (<div/>)
     }
     
 }
@@ -459,7 +465,7 @@ function ExpenseList({ currentHobbie, currentProject }) {
 
     return (
         <div className="w-1/3 p-2 m-2 debug flex flex-col">
-            <div className="p-2 hover:bg-metal hover:cursor-pointer text-center"
+            <div className="p-2 rounded hover:bg-metal hover:cursor-pointer text-center"
                 onClick={() => setAddingExpense(true)}>
                 Add an Expense
             </div>
