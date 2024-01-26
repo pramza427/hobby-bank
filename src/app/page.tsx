@@ -261,7 +261,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
                             :
                             <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds" defaultValue={parseInt(seconds)} onClick={handleFocus}></input>
                         </div>
-                        <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
+                        <div className="text-right">{"$" + calculateBankAfterExpenses(project)}</div>
                     </div>
                     <div className="flex justify-center">
                         <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
@@ -287,7 +287,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
                     <div className="">{project.title}</div>
                     <div className="text-right">${parseFloat(project.price).toFixed(2)}</div>
                     <div className="text-right">{convertTime(days, hours, minutes, seconds)}</div>
-                    <div className="text-right">{"$" + (totalSeconds / 3600 * project.price).toFixed(2)}</div>
+                    <div className="text-right">{"$" + calculateBankAfterExpenses(project)}</div>
                 </div>
                 {lowerSection}
             </div>
@@ -441,7 +441,9 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
 function ExpenseList({ currentHobbie, currentProject }) {
     const [addingExpense, setAddingExpense] = useState(false);
     const project = currentHobbie.projects.find(project => project.id == currentProject)
-    const expenses = project.expenses;
+
+    if (project == null) {return(<div/>) }
+    const expenses = project?.expenses;
 
 
     const expensesList = expenses?.map(expense =>
