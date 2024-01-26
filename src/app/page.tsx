@@ -151,10 +151,10 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
     )
 }
 
-function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, setShowExpenses }) {
+function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, showExpenses, setShowExpenses }) {
 
     function toggleExpenses() {
-        setShowExpenses(true)
+        setShowExpenses(!showExpenses)
     }
     function toggleTimer() {
         if (isRunning) {
@@ -180,12 +180,12 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
             <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal">Add Time</div>
             <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
                 onClick={toggleExpenses}>
-                {"Expenses ->"}</div>
+                {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
         </div>
     )
 }
 
-function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject, setShowExpenses }) {
+function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject, showExpenses, setShowExpenses }) {
     const stopwatchOffset = new Date();
     stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + project.time ?? 0)
     const {
@@ -233,7 +233,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
     let lowerSection;
     let timingClass = "";
     if (isCurrentProject) {
-        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} setShowExpenses={setShowExpenses} />
+        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses}  setShowExpenses={setShowExpenses} />
         selectedClass = "bg-midnight "
     }
     else {
@@ -316,7 +316,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
                 id={project.id}
                 className=""
             >
-                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} deleteProject={deleteProject} setShowExpenses={setShowExpenses} />
+                <ProjectItem allHobbies={allHobbies} setCurrentProject={setCurrentProject} project={project} currentProject={currentProject} deleteProject={deleteProject} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
             </div>)
     }
     else {
