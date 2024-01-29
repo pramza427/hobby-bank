@@ -26,8 +26,10 @@ function calculateTotalExpenses(project: object) {
     return expensesCost = expensesCost ?? 0;
 }
 
-function calculateBankAfterExpenses(project: object) {
-    var rateTime = project.time / 3600 * project.price
+
+
+function calculateBankAfterExpenses(project: object, totalSeconds: number) {
+    var rateTime = totalSeconds / 3600 * project.price
     var expensesCost = calculateTotalExpenses(project);
 
     return (rateTime - expensesCost).toFixed(2)
@@ -129,11 +131,11 @@ function AddHobbie({ toggleAddingHobbie, currentHobbie, allHobbies, setHobbies }
     }
 
     return (
-        <div className="bg-opacity-90 bg-slate-950 "
+        <div className="bg-slate-950 border border-gray-800 rounded"
         onClick={toggleAddingHobbie }
         >
             <div onClick={event => event.stopPropagation()}
-                className="p-2 inline-block border border-gray-800 rounded">
+                className="p-2 inline-block ">
                 <form action={submitNewHobbie}>
                     <div>
                         <div>
@@ -167,22 +169,39 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
         }
     }
     var timerText = isRunning ? "Stop Timer" : "Start Timer"
-    return (
-        <div className="relative flex justify-center">
-            <div className="absolute left-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                onClick={() => setEditing(true) }>
-                Edit
+    if (isRunning) {
+        return (
+            <div className="relative flex justify-center">
+                
+                <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={toggleTimer}>
+                    {timerText}
+                </div>
+                <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={toggleExpenses}>
+                    {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
             </div>
-            <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                onClick={toggleTimer}>
-                {timerText}
+        )
+    }
+    else {
+        return (
+            <div className="relative flex justify-center">
+                <div className="absolute left-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={() => setEditing(true)}>
+                    Edit
+                </div>
+                <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={toggleTimer}>
+                    {timerText}
+                </div>
+                <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal">Add Time</div>
+                <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={toggleExpenses}>
+                    {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
             </div>
-            <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal">Add Time</div>
-            <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                onClick={toggleExpenses}>
-                {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
-        </div>
-    )
+        )
+    }
+    
 }
 
 function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, deleteProject, showExpenses, setShowExpenses }) {
@@ -232,6 +251,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
     let selectedClass;
     let lowerSection;
     let timingClass = "";
+    let expensesExtentionDiv = <div></div>;
     if (isCurrentProject) {
         lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses}  setShowExpenses={setShowExpenses} />
         selectedClass = "bg-midnight "
@@ -240,6 +260,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
         lowerSection = <div></div>
         selectedClass = "hover:bg-metal "
     }
+    if (isCurrentProject && showExpenses) { expensesExtentionDiv = <div className="absolute bg-midnight h-full w-5 -right-5 top-0"></div> }
     { isRunning ? timingClass = " timing " : "" }
 
     if (editing) {
@@ -261,7 +282,7 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
                             :
                             <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds" defaultValue={parseInt(seconds)} onClick={handleFocus}></input>
                         </div>
-                        <div className="text-right">{"$" + calculateBankAfterExpenses(project)}</div>
+                        <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                     </div>
                     <div className="flex justify-center">
                         <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
@@ -281,15 +302,16 @@ function ProjectItem({ allHobbies, setCurrentProject, project, currentProject, d
     }
     else {
         return (
-            <div className={"p-2 hover:cursor-pointer " + selectedClass + timingClass}
+            <div className={"relative p-2 hover:cursor-pointer " + selectedClass + timingClass}
                 onClick={setProject}>
                 <div className="grid grid-cols-4">
                     <div className="">{project.title}</div>
                     <div className="text-right">${parseFloat(project.price).toFixed(2)}</div>
                     <div className="text-right">{convertTime(days, hours, minutes, seconds)}</div>
-                    <div className="text-right">{"$" + calculateBankAfterExpenses(project)}</div>
+                    <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                 </div>
                 {lowerSection}
+                {expensesExtentionDiv}
             </div>
 
         )
@@ -328,12 +350,14 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
     let expenseList = showExpenses ? <ExpenseList currentHobbie={currentHobbie} currentProject={currentProject}/> : <div />
     return (
         <div className="flex w-full">
-            <div className="debug relative w-full m-2">
+            <div className="debug w-full m-2">
                 <div className="flex justify-center">
                     <div className="text-2xl p-3"> Projects </div>
-                    <div className="absolute m-2 p-2 left-0 rounded-lg hover:bg-metal hover:cursor-pointer"
-                        onClick={toggleAddingProject}>
-                        New Project +
+                </div>
+                <div>
+                    <div className="mx-2 p-2 inline-block rounded-lg hover:bg-metal hover:cursor-pointer"
+                    onClick={toggleAddingProject}>
+                    New Project +
                     </div>
                 </div>
                 
@@ -348,6 +372,7 @@ function ProjectList({ allHobbies, setHobbies, currentProject, setCurrentProject
                     {projectList}
                 </div>
             </div>
+            <div id="expenses"></div>
             {expenseList}
         </div>
         
@@ -369,7 +394,7 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
         toggleAddingProject()
     }
     return (
-        <div className="p-2 bg-midnight">
+        <div className="bg-slate-950 border border-gray-800 rounded p-2">
             <form action={submitNewProject}>
                 <div className="grid grid-cols-4">
                     <input className="bg-slate-800 border border-gray-700" name="title"></input>
@@ -422,20 +447,23 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
 
     if (addingExpense) {
         return (
-            <form action={submitNewExpense}>
-                <div className="grid grid-cols-2">
-                    <div>
-                        <div>Item</div>
-                        <input name="item" className="w-40 bg-slate-800 border border-gray-700"></input>
+            <div className="bg-slate-950 border border-gray-800 rounded p-2">
+                <form action={submitNewExpense}>
+                    <div className="grid grid-cols-2">
+                        <div>
+                            <div>Item</div>
+                            <input name="item" className="w-40 bg-slate-800 border border-gray-700"></input>
+                        </div>
+                        <div className="text-right">
+                            <div>Cost</div>
+                            <input name="cost" className="w-16 bg-slate-800 border border-gray-700"></input>
+                        </div>
+                        <button className="m-3 p-1 hover:bg-metal rounded" onClick={() => setAddingExpense(false)}>Cancel</button>
+                        <button className="m-3 p-1 hover:bg-metal rounded" type="submit">Add</button>
                     </div>
-                    <div className="text-right">
-                        <div>Cost</div>
-                        <input name="cost" className="w-16 bg-slate-800 border border-gray-700"></input>
-                    </div>
-                    <button className="m-3 p-1 hover:bg-metal" onClick={() => setAddingExpense(false)}>Cancel</button>
-                    <button className="m-3 p-1 hover:bg-metal" type="submit">Add</button>
-                </div>
-            </form >
+                </form >
+            </div>
+            
         )
     }
     else {
@@ -447,6 +475,10 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
 function ExpenseList({ currentHobbie, currentProject }) {
     const [addingExpense, setAddingExpense] = useState(false);
     const project = currentHobbie.projects.find(project => project.id == currentProject)
+
+    function toggleAddingExpense() {
+        setAddingExpense(!addingExpense);
+    }
 
     if (project == null) {return(<div/>) }
     const expenses = project?.expenses;
@@ -464,9 +496,9 @@ function ExpenseList({ currentHobbie, currentProject }) {
     )
 
     return (
-        <div className="w-1/3 p-2 m-2 debug flex flex-col">
+        <div className="w-1/3 p-2 m-2 debug flex flex-col bg-midnight">
             <div className="p-2 rounded hover:bg-metal hover:cursor-pointer text-center"
-                onClick={() => setAddingExpense(true)}>
+                onClick={toggleAddingExpense}>
                 Add an Expense
             </div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
@@ -484,7 +516,7 @@ function ExpenseList({ currentHobbie, currentProject }) {
                 </div>
                 <div className="flex justify-between">
                     <div>Remaining Banked:</div>
-                    <div>{"$" + calculateBankAfterExpenses(project)}</div>
+                    <div>{"$" + calculateBankAfterExpenses(project, project.time)}</div>
                 </div>
             </div>
         </div>
