@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useStopwatch } from 'react-timer-hook';
 import { Tooltip } from 'react-tooltip';
+import { useClickAway } from '@uidotdev/usehooks';
 
 function convertTime(days: number, hours: number, minutes: number, seconds: number) {
     var d = days < 10 ? "0" + days : days;
@@ -129,7 +130,12 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
         <div/>
     }
     function getHobbiesFromLocal() {
-        setHobbies(JSON.parse(window.localStorage.getItem("hobbies")) ?? [])
+        var hobbies = JSON.parse(window.localStorage.getItem("hobbies")) ?? []
+        setHobbies(hobbies);
+        if (hobbies) {
+            setcurrentHobbieID(hobbies[0].id);
+        }
+        
     }
 
     let hobbieForm = addingHobbie ? <AddHobbie toggleAddingHobbie={toggleAddingHobbie} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
@@ -245,7 +251,6 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
                     onClick={toggleTimer}>
                     {timerText}
                 </div>
-                <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal">Add Time</div>
                 <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
                     onClick={toggleExpenses}>
                     {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
@@ -294,9 +299,13 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
         project = {};
         console.log(elem);
         setEditing(false);
-        //listElem?.removeChild(elem);
+        setcurrentProjectID(null);
+        
     }
-    const handleFocus = (event:any) => event.target.select();
+    const handleFocus = (event: any) => event.target.select();
+    const editingRef = useClickAway(() => {
+        setEditing(false);
+    });
 
     const iscurrentProjectID = project.id == currentProjectID;
     let selectedClass;
@@ -311,12 +320,12 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
         lowerSection = <div></div>
         selectedClass = "hover:bg-metal "
     }
-    if (iscurrentProjectID && showExpenses) { expensesExtentionDiv = <div className="absolute bg-midnight h-full w-5 -right-5 top-0"></div> }
+    if (iscurrentProjectID && showExpenses) { expensesExtentionDiv = <div className="-z-10 absolute bg-midnight h-full w-5 -right-5 top-0"></div> }
     { isRunning ? timingClass = " timing " : "" }
 
     if (editing) {
         return (
-            <div className="p-2 bg-midnight">
+            <div className="p-2 bg-midnight" ref={editingRef }>
                 <form action={editProject}>
                     <div className="grid grid-cols-4">
                         <input className="bg-slate-800 border border-gray-700" name="title" defaultValue={project.title} onClick={handleFocus}></input>
@@ -353,7 +362,7 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
     }
     else {
         return (
-            <div className={"relative p-2 hover:cursor-pointer " + selectedClass + timingClass}
+            <div className={"relative p-2 hover:cursor-pointer z-50 " + selectedClass + timingClass}
                 onClick={setProject}>
                 <div className="grid grid-cols-4">
                     <div className="">{project.title}</div>
@@ -398,7 +407,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
     }
 
     let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
-    let expenseList = showExpenses ? <ExpenseList currentHobbieID={currentHobbieID} currentProjectID={currentProjectID}/> : <div />
+    let expenseList = showExpenses ? <ExpenseList currentHobbieID={currentHobbieID} currentProjectID={currentProjectID} setShowExpenses={setShowExpenses} /> : <div />
     return (
         <div className="flex w-full">
             <div className="debug w-full m-2">
@@ -523,9 +532,13 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
     
 }
 
-function ExpenseList({ currentHobbieID, currentProjectID }) {
+function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
     const [addingExpense, setAddingExpense] = useState(false);
     const project = currentHobbieID.projects.find(project => project.id == currentProjectID)
+
+    const closeExpensesRef = useClickAway(() => {
+        setShowExpenses(false);
+    });
 
     function toggleAddingExpense() {
         setAddingExpense(!addingExpense);
@@ -548,9 +561,15 @@ function ExpenseList({ currentHobbieID, currentProjectID }) {
 
     return (
         <div className="w-1/3 p-2 m-2 debug flex flex-col bg-midnight rounded">
-            <div className="p-2 rounded hover:bg-metal hover:cursor-pointer text-center"
-                onClick={toggleAddingExpense}>
-                Add an Expense
+            <div className="flex">
+                <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
+                    onClick={() => setShowExpenses(false)} >
+                    {"<"}
+                </div>
+                <div className="p-2 flex-grow rounded hover:bg-metal hover:cursor-pointer text-center"
+                    onClick={toggleAddingExpense}>
+                    Add an Expense
+                </div>
             </div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
             <div className="flex-grow">
