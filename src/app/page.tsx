@@ -188,17 +188,17 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
     }
 
     return (
-        <div className="bg-slate-950 border border-gray-800 rounded"
+        <div className="bg-emerald-950 border border-emerald-800 rounded"
         onClick={toggleAddingHobbie }
         >
             <div onClick={event => event.stopPropagation()}
                 className="p-2 inline-block ">
-                <form action={submitNewHobbie}>
+                <form action={submitNewHobbie} autoComplete="off">
                     <div>
                         <div>
                             Name of Hobbie
                         </div>
-                        <input className="bg-slate-800 border border-gray-700 active:border-blue-900" name="name"></input>
+                        <input className="bg-teal-900 border border-teal-800 active:border-blue-900" name="name" required></input>
                     </div>
 
                     <button type="button" className="m-3 p-1 rounded hover:bg-metal" onClick={toggleAddingHobbie} >Cancel</button>
@@ -439,14 +439,24 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
     )
 }
 
-function AddProject({ toggleAddingProject, currentHobbieID, allHobbies, setHobbies}) {
+function AddProject({ toggleAddingProject, currentHobbieID, allHobbies, setHobbies }) {
+
+    function calcTime(s, m, h, d) {
+        let totalTime = 0;
+        if (s) { totalTime += s }
+        if (m) { totalTime += m * 60 }
+        if (h) { totalTime += h * 3600 }
+        if (d) { totalTime += d * 86400 }
+        return totalTime;
+    }
+
     function submitNewProject(formData: object) {
         let newProject = {
             title: formData.get("title"),
             price: parseFloat(formData.get("rate")),
             id: Math.floor(Math.random()*1000),
             parentID: currentHobbieID.id,
-            time: parseInt(formData.get("seconds")),
+            time: calcTime(parseInt(formData.get("seconds")), parseInt(formData.get("minutes")), parseInt(formData.get("hours")), parseInt(formData.get("days"))),
             expenses: []
         }
         currentHobbieID.projects.push(newProject)
@@ -454,22 +464,22 @@ function AddProject({ toggleAddingProject, currentHobbieID, allHobbies, setHobbi
         toggleAddingProject()
     }
     return (
-        <div className="bg-slate-950 border border-gray-800 rounded p-2">
-            <form action={submitNewProject}>
+        <div className="bg-emerald-950 border border-emerald-800 rounded p-2">
+            <form action={submitNewProject} autoComplete="off">
                 <div className="grid grid-cols-4">
-                    <input className="bg-slate-800 border border-gray-700" name="title"></input>
+                    <input className="bg-teal-900 border border-teal-800" name="title" required></input>
                     <div className="flex justify-end">
                         $
-                        <input className="bg-slate-800 border border-gray-700 text-right w-16" name="rate" ></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-16" name="rate" required></input>
                     </div>
                     <div className="flex justify-end">
-                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="days"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="days"></input>
                         :
-                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="hours"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="hours"></input>
                         :
-                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="minutes"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="minutes"></input>
                         :
-                        <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="seconds"></input>
                     </div>
                     <div></div>
                 </div>
@@ -507,16 +517,16 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
 
     if (addingExpense) {
         return (
-            <div className="bg-slate-950 border border-gray-800 rounded p-2">
-                <form action={submitNewExpense}>
+            <div className="bg-emerald-950 border border-emerald-800 rounded p-2">
+                <form action={submitNewExpense} autoComplete="off">
                     <div className="grid grid-cols-2">
                         <div>
                             <div>Item</div>
-                            <input name="item" className="w-40 bg-slate-800 border border-gray-700"></input>
+                            <input name="item" className="w-40 bg-teal-900 border border-teal-800" required></input>
                         </div>
                         <div className="text-right">
                             <div>Cost</div>
-                            <input name="cost" className="w-16 bg-slate-800 border border-gray-700"></input>
+                            <input name="cost" className="w-16 bg-teal-900 border border-teal-800" required></input>
                         </div>
                         <button className="m-3 p-1 hover:bg-metal rounded" onClick={() => setAddingExpense(false)}>Cancel</button>
                         <button className="m-3 p-1 hover:bg-metal rounded" type="submit">Add</button>
