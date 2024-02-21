@@ -86,7 +86,7 @@ export default function Home() {
     }
 
     return (
-        <main className="debug flex min-h-screen text-lg">
+        <main className="flex min-h-screen text-lg">
             <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} get={getcurrentHobbieID} />
             <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setcurrentProjectID={setcurrentProjectID} getHobbie={getcurrentHobbieID}  />
 
@@ -103,12 +103,13 @@ function HobbieButton({ currentHobbieID, setcurrentHobbieID, hobbie, allHobbies,
         if (window.confirm("Delete " + hobbie.title + "?")) {
             let filteredHobbies = allHobbies.filter((h: any) => h.id != hobbie.id);
             setHobbies(filteredHobbies);
+            window.localStorage.setItem("hobbies", JSON.stringify(filteredHobbies));
         }
     }
     const totalTime = hobbie.projects.reduce((total, project) => total + project.time, 0)
-    const isSelected = (currentHobbieID == hobbie.id) ? " bg-midnight " : " hover:bg-metal "
+    const isSelected = (currentHobbieID == hobbie.id) ? " bg-violet-900 " : " hover:bg-metal "
     return (
-        <div className={" group p-1 rounded hover:cursor-pointer " + isSelected}
+        <div className={"group p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
             <div>{hobbie.title}</div>
             <div className="flex justify-between w-full">
@@ -132,7 +133,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
     let hobbieList;
     if (allHobbies.length != 0) {
         hobbieList = allHobbies.map(hobbie =>
-            <div
+            <div className="border-b border-violet-950"
                 key={hobbie.id}>
                 <HobbieButton currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} hobbie={hobbie} allHobbies={allHobbies} setHobbies={setHobbies} />
             </div>)
@@ -152,7 +153,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
     let hobbieForm = addingHobbie ? <AddHobbie toggleAddingHobbie={toggleAddingHobbie} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
 
     return (
-        <div className="w-1/4 debug p-2 m-2 border border-gray-300 flex flex-col rounded">
+        <div className="w-1/4 p-2 m-2 border border-violet-950 bg-violet-950 bg-opacity-50 flex flex-col rounded">
             <div className="p-2 rounded text-center hover:bg-metal hover:cursor-pointer"
                 onClick={toggleAddingHobbie}>
                 Add a Hobbie
@@ -161,7 +162,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
             <div className="flex flex-col">
                 {hobbieList}
             </div>
-            <div className="flex-grow"></div>
+            <div className="flex-grow border-b border-violet-900 mb-2"></div>
             <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between z-1"
                 onClick={getHobbiesFromLocal}>
                 Load from Local
@@ -325,18 +326,18 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
     let expensesExtentionDiv = <div></div>;
     if (iscurrentProjectID) {
         lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses}  setShowExpenses={setShowExpenses} />
-        selectedClass = "bg-midnight "
+        selectedClass = "bg-violet-950 "
     }
     else {
         lowerSection = <div></div>
         selectedClass = "hover:bg-metal "
     }
-    if (iscurrentProjectID && showExpenses) { expensesExtentionDiv = <div className="-z-10 absolute bg-midnight h-full w-5 -right-5 top-0"></div> }
+    if (iscurrentProjectID && showExpenses) { expensesExtentionDiv = <div className="-z-10 absolute bg-violet-950 h-full w-5 -right-5 top-0"></div> }
     { isRunning ? timingClass = " timing " : "" }
 
     if (editing) {
         return (
-            <div className="p-2 bg-midnight" ref={editingRef }>
+            <div className="p-2 bg-violet-950" ref={editingRef }>
                 <form action={editProject}>
                     <div className="grid grid-cols-4">
                         <input className="bg-slate-800 border border-gray-700" name="title" defaultValue={project.title} onClick={handleFocus}></input>
@@ -408,7 +409,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
             <div
                 key={project.id}
                 id={project.id}
-                className=""
+                className="even:bg-violet-950 even:bg-opacity-30"
             >
                 <ProjectItem allHobbies={allHobbies} setcurrentProjectID={setcurrentProjectID} project={project} currentProjectID={currentProjectID} deleteProject={deleteProject} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
             </div>)
@@ -420,8 +421,8 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
     let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
     let expenseList = showExpenses ? <ExpenseList currentHobbieID={currentHobbieID} currentProjectID={currentProjectID} setShowExpenses={setShowExpenses} /> : <div />
     return (
-        <div className="flex w-full">
-            <div className="debug w-full m-2">
+        <div className="flex w-full bg-violet-950 m-2 rounded bg-opacity-50 border border-violet-950">
+            <div className="w-full m-2">
                 <div className="flex justify-center">
                     <div className="text-2xl p-3"> Projects </div>
                 </div>
@@ -439,8 +440,11 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
                         <div className="text-right">Time</div>
                         <div className="text-right">Bank</div>
                     </div>
-                    {projectForm}
-                    {projectList}
+                    <div className="overflow-y-auto overflow-x-hidden">
+                        {projectForm}
+                        {projectList}
+                    </div>
+                    
                 </div>
             </div>
             <div id="expenses"></div>
@@ -570,7 +574,7 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
 
 
     const expensesList = expenses?.map(expense =>
-        <div className="flex justify-between" key={expense.key}>
+        <div className="flex justify-between odd:bg-violet-900 odd:bg-opacity-50 px-2" key={expense.key}>
             <div>
                 {expense.title}
             </div>  
@@ -581,7 +585,7 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
     )
 
     return (
-        <div className="w-1/3 p-2 m-2 debug flex flex-col bg-midnight rounded">
+        <div className="w-1/3 p-2 m-2 flex flex-col bg-violet-950 rounded border border-violet-900 z-50">
             <div className="flex">
                 <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
                     onClick={() => setShowExpenses(false)} >
@@ -593,10 +597,10 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
                 </div>
             </div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
-            <div className="flex-grow">
+            <div className="flex-grow mb-2 border-b border-violet-800">
                 {expensesList}
             </div>
-            <div className="pt-2 border-t border-gray-800">
+            <div>
                 <div className="flex justify-between">
                     <div>Total Banked:</div>
                     <div>{"$" + (project.time / 3600 * project.price).toFixed(2)}</div>
