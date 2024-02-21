@@ -94,17 +94,28 @@ export default function Home() {
     )
 }
 
-function HobbieButton({ currentHobbieID, setcurrentHobbieID, hobbie }) {
+function HobbieButton({ currentHobbieID, setcurrentHobbieID, hobbie, allHobbies, setHobbies }) {
     function clickHandle() {
         setcurrentHobbieID(hobbie.id)
+    }
+    function deleteHobbie(event) {
+        event.stopPropagation()
+        if (window.confirm("Delete " + hobbie.title + "?")) {
+            let filteredHobbies = allHobbies.filter((h: any) => h.id != hobbie.id);
+            setHobbies(filteredHobbies);
+        }
     }
     const totalTime = hobbie.projects.reduce((total, project) => total + project.time, 0)
     const isSelected = (currentHobbieID == hobbie.id) ? " bg-midnight " : " hover:bg-metal "
     return (
-        <div className={"p-1 rounded hover:cursor-pointer " + isSelected}
+        <div className={" group p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
-            <div>{hobbie.title}</div> 
-            <div className="text-right">{convertTotalTime(totalTime)}</div>
+            <div>{hobbie.title}</div>
+            <div className="flex justify-between w-full">
+                <div className="hidden group-hover:block hover:bg-red-900 rounded px-2" onClick={deleteHobbie}>DEL</div>
+                <div className="text-right flex-grow">{convertTotalTime(totalTime)}</div>
+            </div>
+            
         </div>
     )
 }
@@ -123,7 +134,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
         hobbieList = allHobbies.map(hobbie =>
             <div
                 key={hobbie.id}>
-                <HobbieButton currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} hobbie={hobbie} />
+                <HobbieButton currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} hobbie={hobbie} allHobbies={allHobbies} setHobbies={setHobbies} />
             </div>)
     }
     else {
