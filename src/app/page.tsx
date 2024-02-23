@@ -7,11 +7,12 @@ import { Tooltip } from 'react-tooltip';
 import { useClickAway } from '@uidotdev/usehooks';
 
 function convertTime(days: number, hours: number, minutes: number, seconds: number) {
-    var d = days < 10 ? "0" + days : days;
     var h = hours < 10 ? "0" + hours : hours;
     var m = minutes < 10 ? "0" + minutes : minutes;
     var s = seconds < 10 ? "0" + seconds : seconds
-    return d + ":" + h + ":" + m + ":" + s
+    if (days > 0) { return days + ":" + h + ":" + m + ":" + s }
+    else { return h + ":" + m + ":" + s }
+    
 }
 
 function convertTotalTime(totalTime: number) {
@@ -80,15 +81,16 @@ export default function Home() {
     const [currentHobbieID, setcurrentHobbieID] = useState(0);
     const [currentProjectID, setcurrentProjectID] = useState(0);
     const [hobbies, setHobbies] = useState([]);
+    
 
     function getcurrentHobbieID() {
         return hobbies.find(hobbie => hobbie.id == currentHobbieID)
     }
 
     return (
-        <main className="flex min-h-screen text-lg">
-            <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} get={getcurrentHobbieID} />
-            <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setcurrentProjectID={setcurrentProjectID} getHobbie={getcurrentHobbieID}  />
+        <main className="flex min-h-screen text-sm md:text-lg overflow-hidden">
+            <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} />
+            <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setcurrentProjectID={setcurrentProjectID} getHobbie={getcurrentHobbieID} />
 
         </main>
     )
@@ -121,8 +123,16 @@ function HobbieButton({ currentHobbieID, setcurrentHobbieID, hobbie, allHobbies,
     )
 }
 
-function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieID, get }) { 
+function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieID }) { 
     const [addingHobbie, setAddingHobbie] = useState(false);
+    const [showHobbies, setShowHobbies] = useState(true);
+
+    const closeHobbiesRef = useClickAway(() => {
+        if (window.innerWidth < 768) {
+            setShowHobbies(false);
+        }
+    });
+
     function saveToFile() {
         const blob = new Blob([JSON.stringify(allHobbies, null, 2)], { type: 'application/json' });
         saveFile(blob);
@@ -152,40 +162,59 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
 
     let hobbieForm = addingHobbie ? <AddHobbie toggleAddingHobbie={toggleAddingHobbie} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
 
-    return (
-        <div className="w-1/4 p-2 m-2 border border-violet-950 bg-violet-950 bg-opacity-50 flex flex-col rounded">
-            <div className="p-2 rounded text-center hover:bg-metal hover:cursor-pointer"
-                onClick={toggleAddingHobbie}>
-                Add a Hobbie
-            </div>
-            <div className="border-b border-violet-900 mt-2 mb-2"></div>
-            {hobbieForm}
-            <div className="flex flex-col">
-                {hobbieList}
-            </div>
-            <div className="flex-grow border-b border-violet-900 mb-2"></div>
-            <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between "
-                onClick={getHobbiesFromLocal}>
-                Load from Local
-                <div className=" px-4" id="local-warning">             
-                    i
+    if (showHobbies) {
+        return (
+            <div className="absolute h-full w-2/3 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/4 md:m-2 border border-violet-900 bg-violet-950 md:bg-opacity-70 flex flex-col md:rounded"
+                onClick={(event) => event.stopPropagation()}
+                ref={closeHobbiesRef}>
+                <div className="flex">
+                    <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
+                        onClick={() => setShowHobbies(false)} >
+                        {"<"}
+                    </div>
+                    <div className="p-2 flex-grow rounded text-center hover:bg-metal hover:cursor-pointer"
+                        onClick={toggleAddingHobbie}>
+                        Add a Hobbie
+                    </div>
                 </div>
-                <Tooltip anchorSelect="#local-warning" >
-                    <div className="z-50">
-                        Changes will be automatically saved to local, but data can be lost if cache is cleared.
-                    </div> 
-                </Tooltip>
+                <div className="border-b border-violet-900 mt-2 mb-2"></div>
+                {hobbieForm}
+                <div className="flex flex-col">
+                    {hobbieList}
+                </div>
+                <div className="flex-grow border-b border-violet-900 mb-2"></div>
+                <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between "
+                    onClick={getHobbiesFromLocal}>
+                    Load from Local
+                    <div className=" px-4" id="local-warning">
+                        i
+                    </div>
+                    <Tooltip anchorSelect="#local-warning" >
+                        <div className="z-50">
+                            Changes will be automatically saved to local, but data can be lost if cache is cleared.
+                        </div>
+                    </Tooltip>
+                </div>
+                <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded"
+                    onClick={saveToFile}>
+                    Save to File
+                </div>
+                <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded"
+                    onClick={() => loadFile(setHobbies)}>
+                    Load From File
+                </div>
             </div>
-            <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded"
-                onClick={saveToFile }>
-                Save to File
+        )
+    }
+    else {
+        return (
+            <div className="w-10 border-violet-900 bg-violet-950 md:bg-opacity-50"
+                onClick={() => setShowHobbies(true)}>
+                <div className="[writing-mode:vertical-lr] p-2">Hobbies</div>
             </div>
-            <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded"
-                onClick={() => loadFile(setHobbies)}>
-                Load From File
-            </div>
-        </div>
-    )
+        )
+    }
+    
 }
 
 function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies }) {
@@ -419,7 +448,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
     let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
     let expenseList = showExpenses ? <ExpenseList currentHobbieID={currentHobbieID} currentProjectID={currentProjectID} setShowExpenses={setShowExpenses} /> : <div />
     return (
-        <div className="flex w-full bg-violet-950 m-2 rounded bg-opacity-50 border border-violet-950">
+        <div className="flex w-full bg-violet-950 md:m-2 md:rounded bg-opacity-50 border border-violet-950">
             <div className="w-full m-2 relative ">
                 <div className="flex justify-center ">
                     <div className="text-2xl p-3"> Projects </div>
@@ -560,7 +589,9 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
     const project = currentHobbieID.projects.find(project => project.id == currentProjectID)
 
     const closeExpensesRef = useClickAway(() => {
-        setShowExpenses(false);
+        if (window.innerWidth < 768) {
+            setShowExpenses(false);
+        }
     });
 
     function toggleAddingExpense() {
@@ -583,7 +614,8 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
     )
 
     return (
-        <div className="w-1/3 p-2 m-2 flex flex-col bg-violet-950 rounded border border-violet-900 ">
+        <div className="absolute right-0 w-2/3 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+            ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
                     onClick={() => setShowExpenses(false)} >
