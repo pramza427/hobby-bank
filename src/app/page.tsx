@@ -107,7 +107,7 @@ function HobbieButton({ currentHobbieID, setcurrentHobbieID, hobbie, allHobbies,
         }
     }
     const totalTime = hobbie.projects.reduce((total, project) => total + project.time, 0)
-    const isSelected = (currentHobbieID == hobbie.id) ? " bg-violet-900 " : " hover:bg-metal "
+    const isSelected = (currentHobbieID == hobbie.id) ? " bg-violet-900 bg-opacity-100 " : " hover:bg-metal "
     return (
         <div className={"group p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
@@ -133,7 +133,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
     let hobbieList;
     if (allHobbies.length != 0) {
         hobbieList = allHobbies.map(hobbie =>
-            <div className="border-b border-violet-950"
+            <div className="border-b border-violet-900"
                 key={hobbie.id}>
                 <HobbieButton currentHobbieID={currentHobbieID} setcurrentHobbieID={setcurrentHobbieID} hobbie={hobbie} allHobbies={allHobbies} setHobbies={setHobbies} />
             </div>)
@@ -158,15 +158,16 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setcurrentHobbieI
                 onClick={toggleAddingHobbie}>
                 Add a Hobbie
             </div>
+            <div className="border-b border-violet-900 mt-2 mb-2"></div>
             {hobbieForm}
             <div className="flex flex-col">
                 {hobbieList}
             </div>
             <div className="flex-grow border-b border-violet-900 mb-2"></div>
-            <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between z-1"
+            <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between "
                 onClick={getHobbiesFromLocal}>
                 Load from Local
-                <div className="z-100 px-4" id="local-warning">             
+                <div className=" px-4" id="local-warning">             
                     i
                 </div>
                 <Tooltip anchorSelect="#local-warning" >
@@ -200,7 +201,7 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
     }
 
     return (
-        <div className="bg-emerald-950 border border-emerald-800 rounded"
+        <div className="bg-emerald-950 border border-emerald-800 rounded mb-2"
         onClick={toggleAddingHobbie }
         >
             <div onClick={event => event.stopPropagation()}
@@ -323,7 +324,6 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
     let selectedClass;
     let lowerSection;
     let timingClass = "";
-    let expensesExtentionDiv = <div></div>;
     if (iscurrentProjectID) {
         lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses}  setShowExpenses={setShowExpenses} />
         selectedClass = "bg-violet-950 "
@@ -332,7 +332,6 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
         lowerSection = <div></div>
         selectedClass = "hover:bg-metal "
     }
-    if (iscurrentProjectID && showExpenses) { expensesExtentionDiv = <div className="-z-10 absolute bg-violet-950 h-full w-5 -right-5 top-0"></div> }
     { isRunning ? timingClass = " timing " : "" }
 
     if (editing) {
@@ -374,7 +373,7 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
     }
     else {
         return (
-            <div className={"relative p-2 hover:cursor-pointer z-50 " + selectedClass + timingClass}
+            <div className={"relative p-2 hover:cursor-pointer " + selectedClass + timingClass}
                 onClick={setProject}>
                 <div className="grid grid-cols-4">
                     <div className="">{project.title}</div>
@@ -383,7 +382,6 @@ function ProjectItem({ allHobbies, setcurrentProjectID, project, currentProjectI
                     <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                 </div>
                 {lowerSection}
-                {expensesExtentionDiv}
             </div>
 
         )
@@ -422,12 +420,12 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setcurrentProje
     let expenseList = showExpenses ? <ExpenseList currentHobbieID={currentHobbieID} currentProjectID={currentProjectID} setShowExpenses={setShowExpenses} /> : <div />
     return (
         <div className="flex w-full bg-violet-950 m-2 rounded bg-opacity-50 border border-violet-950">
-            <div className="w-full m-2">
-                <div className="flex justify-center">
+            <div className="w-full m-2 relative ">
+                <div className="flex justify-center ">
                     <div className="text-2xl p-3"> Projects </div>
                 </div>
                 <div>
-                    <div className="mx-2 p-2 inline-block rounded-lg hover:bg-metal hover:cursor-pointer"
+                    <div className=" absolute top-2 left-1 mx-2 p-2 inline-block rounded-lg hover:bg-metal hover:cursor-pointer"
                     onClick={toggleAddingProject}>
                     New Project +
                     </div>
@@ -532,7 +530,7 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }) {
 
     if (addingExpense) {
         return (
-            <div className="bg-emerald-950 border border-emerald-800 rounded p-2">
+            <div className="bg-emerald-950 border border-emerald-800 rounded p-2 mb-2">
                 <form action={submitNewExpense} autoComplete="off">
                     <div className="grid grid-cols-2">
                         <div>
@@ -585,8 +583,8 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
     )
 
     return (
-        <div className="w-1/3 p-2 m-2 flex flex-col bg-violet-950 rounded border border-violet-900 z-50">
-            <div className="flex">
+        <div className="w-1/3 p-2 m-2 flex flex-col bg-violet-950 rounded border border-violet-900 ">
+            <div className="flex mb-2">
                 <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
                     onClick={() => setShowExpenses(false)} >
                     {"<"}
@@ -596,6 +594,7 @@ function ExpenseList({ currentHobbieID, currentProjectID, setShowExpenses }) {
                     Add an Expense
                 </div>
             </div>
+            <div className="border-b border-violet-800 mb-2"></div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
             <div className="flex-grow mb-2 border-b border-violet-800">
                 {expensesList}
