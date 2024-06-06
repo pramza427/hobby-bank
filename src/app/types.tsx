@@ -11,14 +11,14 @@
 
 export interface Hobbie {
     title:        string;
-    defaultPrice: number;
+    defaultRate?:  number;
     id:           number;
     projects:     Project[];
 }
 
 export interface Project {
     title:     string;
-    price:     number;
+    rate:      number;
     id:        number;
     parentID:  number;
     time:      number;
@@ -200,13 +200,13 @@ function r(name: string) {
 const typeMap: any = {
     "Hobbie": o([
         { json: "title", js: "title", typ: "" },
-        { json: "defaultPrice", js: "defaultPrice", typ: 3.14 },
+        { json: "defaultRate", js: "defaultRate", typ: u(undefined, 3.14) },
         { json: "id", js: "id", typ: 0 },
         { json: "projects", js: "projects", typ: a(r("Project")) },
     ], false),
     "Project": o([
         { json: "title", js: "title", typ: "" },
-        { json: "price", js: "price", typ: 3.14 },
+        { json: "rate", js: "rate", typ: 3.14 },
         { json: "id", js: "id", typ: 0 },
         { json: "parentID", js: "parentID", typ: 0 },
         { json: "time", js: "time", typ: 0 },

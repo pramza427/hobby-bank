@@ -11,6 +11,8 @@ import { Convert, Hobbie, Project, Expense } from "./types";
 // -----------  Helper Functions  -----------
 // ------------------------------------------
 
+const SMALL_SCREEN = 768
+
 function convertTime(days: number, hours: number, minutes: number, seconds: number) {
     var h = hours < 10 ? "0" + hours : hours;
     var m = minutes < 10 ? "0" + minutes : minutes;
@@ -33,10 +35,20 @@ function calculateTotalExpenses(project: Project) {
 }
 
 function calculateBankAfterExpenses(project: Project, totalSeconds: number) {
-    var rateTime = totalSeconds / 3600 * project.price
+    var rateTime = totalSeconds / 3600 * project.rate
     var expensesCost = calculateTotalExpenses(project);
 
     return (rateTime - expensesCost).toFixed(2)
+}
+
+function calcBankAfterExpenses(hobbie: Hobbie) {
+    var totalBank = 0.0
+    hobbie.projects.forEach((project: Project) => {
+        var rateTime = project.time / 3600 * project.rate
+        var expensesCost = calculateTotalExpenses(project);
+        totalBank += rateTime - expensesCost
+    })
+    return totalBank.toFixed(2)
 }
 
 const saveFile = async (blob: any) => {
@@ -51,13 +63,10 @@ const saveFile = async (blob: any) => {
 
 function loadFile(setHobbies: Function) {
     var fr;
-
     var input = document.createElement('input');
     input.type = 'file';
-
     input.onchange = (e: Event) => {
         var file = null;
-
         if (!input.files) {
             alert("Please select a file before clicking 'Load'");
         }
@@ -67,14 +76,12 @@ function loadFile(setHobbies: Function) {
             fr.onload = receivedText;
             fr.readAsText(file);
         }
-
         function receivedText(e: any) {
             let json = e.target.result;
             const hobbies = Convert.toHobbie(json);
             setHobbies(hobbies);
         }
     }
-
     input.click();
 }
 
@@ -98,7 +105,7 @@ export default function Home() {
         <main className="flex min-h-screen text-sm md:text-lg overflow-hidden">
             <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setCurrentHobbieID={setCurrentHobbieID} />
             <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setCurrentProjectID={setCurrentProjectID} getCurrentHobbie={getCurrentHobbie} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
-            <ExpenseList getCurrentHobbie={getCurrentHobbie} currentProjectID={currentProjectID} setShowExpenses={setShowExpenses} />
+            <ExpenseList getCurrentHobbie={getCurrentHobbie} currentProjectID={currentProjectID} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
         </main>
     )
 }
@@ -126,12 +133,16 @@ function HobbieButton({ currentHobbieID, setCurrentHobbieID, hobbie, allHobbies,
             window.localStorage.setItem("hobbies", JSON.stringify(filteredHobbies));
         }
     }
-    const totalTime = hobbie.projects.reduce((total: number, project: any) => total + project.time, 0)
+    let totalTime = hobbie.projects.reduce((total: number, project: Project) => total + project.time, 0)
     const isSelected = (currentHobbieID == hobbie.id) ? " bg-violet-900 bg-opacity-100 " : " hover:bg-metal "
     return (
         <div className={"group p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
-            <div>{hobbie.title}</div>
+            <div className="flex justify-between w-full">
+                <div>{hobbie.title}</div>
+                <div>{"$" + calcBankAfterExpenses(hobbie)}</div>
+            </div>
+
             <div className="flex justify-between w-full">
                 <div className="hidden group-hover:block hover:bg-red-900 rounded px-2" onClick={deleteHobbie}>DEL</div>
                 <div className="text-right flex-grow">{convertTotalTime(totalTime)}</div>
@@ -142,13 +153,18 @@ function HobbieButton({ currentHobbieID, setCurrentHobbieID, hobbie, allHobbies,
 }
 
 function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieID }:
-    { allHobbies: Array<Hobbie>, setHobbies: Function, currentHobbieID: number, setCurrentHobbieID: Function }
+    {
+        allHobbies: Array<Hobbie>,
+        setHobbies: Function,
+        currentHobbieID: number,
+        setCurrentHobbieID: Function
+    }
 ) {
     const [addingHobbie, setAddingHobbie] = useState(false);
     const [showHobbies, setShowHobbies] = useState(true);
 
-    const closeHobbiesRef = useClickAway(() => {
-        if (window.innerWidth < 768) {
+    const closeHobbiesRef: any = useClickAway(() => {
+        if (window.innerWidth < SMALL_SCREEN) {
             setShowHobbies(false);
         }
     });
@@ -189,7 +205,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
 
     if (showHobbies) {
         return (
-            <div className="absolute h-full w-2/3 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/4 md:m-2 border border-violet-900 bg-violet-950 md:bg-opacity-70 flex flex-col md:rounded"
+            <div className="absolute h-full w-3/4 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/3 md:m-2 border border-violet-900 bg-violet-950 md:bg-opacity-70 flex flex-col md:rounded"
                 onClick={(event) => event.stopPropagation()}
                 ref={closeHobbiesRef}>
                 <div className="flex">
@@ -283,7 +299,19 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
 // -----------  Project Main Screen  -----------
 // ---------------------------------------------
 
-function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, showExpenses, setShowExpenses }) {
+function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, showExpenses, setShowExpenses }:
+    {
+        allHobbies: Array<Hobbie>,
+        project: Project,
+        isRunning: boolean,
+        startTiming: Function,
+        stopTiming: Function,
+        totalSeconds: number,
+        setEditing: Function,
+        showExpenses: boolean,
+        setShowExpenses: Function
+    }
+) {
 
     function toggleExpenses() {
         setShowExpenses(!showExpenses)
@@ -333,7 +361,17 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
 
 }
 
-function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectID, deleteProject, showExpenses, setShowExpenses }) {
+function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectID, deleteProject, showExpenses, setShowExpenses }:
+    {
+        allHobbies: Array<Hobbie>,
+        setCurrentProjectID: Function,
+        project: Project,
+        currentProjectID: number,
+        deleteProject: Function,
+        showExpenses: boolean,
+        setShowExpenses: Function
+    }
+) {
     const stopwatchOffset = new Date();
     stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + project.time ?? 0)
     const {
@@ -353,10 +391,10 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
     function setProject() {
         setCurrentProjectID(project.id);
     }
-    function editProject(formData: Map<string, any>) {
+    function editProject(formData: any) {
         setEditing(false);
         project.title = formData.get("title") ?? project.title;
-        project.price = parseFloat(formData.get("rate")) ?? project.price;
+        project.rate = parseFloat(formData.get("rate")) ?? project.rate;
         var newTime = parseInt(formData.get("days")) * 86400 + parseInt(formData.get("hours")) * 3600 + parseInt(formData.get("minutes")) * 60 + parseInt(formData.get("seconds"))
         const stopwatchOffset = new Date();
         stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + newTime ?? 0)
@@ -367,16 +405,15 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
     function deleteProjectView() {
         deleteProject(project.id);
 
-        var elem = document.getElementById(project.id);
+        var elem = document.getElementById(project.id.toString());
         var listElem = document.getElementById("projectList")
-        project = {};
         console.log(elem);
         setEditing(false);
         setCurrentProjectID(null);
 
     }
     const handleFocus = (event: any) => event.target.select();
-    const editingRef = useClickAway(() => {
+    const editingRef: any = useClickAway(() => {
         setEditing(false);
     });
 
@@ -402,16 +439,16 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
                         <input className="bg-slate-800 border border-gray-700" name="title" defaultValue={project.title} onClick={handleFocus}></input>
                         <div className="flex justify-end">
                             $
-                            <input className="bg-slate-800 border border-gray-700 text-right w-16" name="rate" defaultValue={parseFloat(project.price).toFixed(2)} onClick={handleFocus}></input>
+                            <input className="bg-slate-800 border border-gray-700 text-right w-16" name="rate" defaultValue={project.rate.toFixed(2)} onClick={handleFocus}></input>
                         </div>
                         <div className="flex justify-end">
-                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="days" defaultValue={parseInt(days)} onClick={handleFocus}></input>
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="days" defaultValue={days} onClick={handleFocus}></input>
                             :
-                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="hours" defaultValue={parseInt(hours)} onClick={handleFocus}></input>
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="hours" defaultValue={hours} onClick={handleFocus}></input>
                             :
-                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="minutes" defaultValue={parseInt(minutes)} onClick={handleFocus}></input>
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="minutes" defaultValue={minutes} onClick={handleFocus}></input>
                             :
-                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds" defaultValue={parseInt(seconds)} onClick={handleFocus}></input>
+                            <input className="bg-slate-800 border border-gray-700 text-right w-8" name="seconds" defaultValue={seconds} onClick={handleFocus}></input>
                         </div>
                         <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                     </div>
@@ -437,7 +474,7 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
                 onClick={setProject}>
                 <div className="grid grid-cols-4">
                     <div className="">{project.title}</div>
-                    <div className="text-right">${parseFloat(project.price).toFixed(2)}</div>
+                    <div className="text-right">${project.rate.toFixed(2)}</div>
                     <div className="text-right">{convertTime(days, hours, minutes, seconds)}</div>
                     <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                 </div>
@@ -513,7 +550,6 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setCurrentProje
                 </div>
             </div>
         </div>
-
     )
 }
 
@@ -534,16 +570,18 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
         return totalTime;
     }
 
-    function submitNewProject(formData: Map<string, any>) {
-        let newProject = {
+    function submitNewProject(formData: any) {
+        console.log(formData)
+        const newProject: Project = {
             title: formData.get("title"),
-            price: parseFloat(formData.get("rate")),
+            rate: parseFloat(formData.get("rate")),
             id: Math.floor(Math.random() * 1000),
             parentID: currentHobbie.id,
             time: calcTime(parseInt(formData.get("seconds")), parseInt(formData.get("minutes")), parseInt(formData.get("hours")), parseInt(formData.get("days"))),
             expenses: []
         }
         currentHobbie.projects.push(newProject)
+        console.log(newProject)
         setHobbies(allHobbies)
         toggleAddingProject()
     }
@@ -554,21 +592,21 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
                     <input className="bg-teal-900 border border-teal-800" name="title" required></input>
                     <div className="flex justify-end">
                         $
-                        <input className="bg-teal-900 border border-teal-800 text-right w-16" name="rate" required></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-16" name="rate" placeholder="0.00" required></input>
                     </div>
                     <div className="flex justify-end">
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="days"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="days" placeholder="d"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="hours"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="hours" placeholder="h"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="minutes"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="minutes" placeholder="m"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="seconds"></input>
+                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="seconds" placeholder="s"></input>
                     </div>
                     <div></div>
                 </div>
                 <div className="flex justify-center">
-                    <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={toggleAddingProject}>
+                    <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={() => toggleAddingProject()}>
                         Cancel
                     </button>
                     <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
@@ -593,8 +631,8 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }:
         project: any
     }
 ) {
-    function submitNewExpense(formData: Map<string, any>) {
-        let newExpense = {
+    function submitNewExpense(formData: any) {
+        let newExpense: Expense = {
             title: formData.get("item"),
             cost: parseFloat(formData.get("cost")),
             id: Math.floor(Math.random() * 1000),
@@ -646,10 +684,10 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
 ) {
     const [addingExpense, setAddingExpense] = useState(false);
     const currentHobbie = getCurrentHobbie()
-    const project = currentHobbie?.projects.find((project: any) => project.id == currentProjectID)
+    const project = currentHobbie?.projects.find((project: Project) => project.id == currentProjectID)
 
-    const closeExpensesRef = useClickAway(() => {
-        if (window.innerWidth < 768) {
+    const closeExpensesRef: any = useClickAway(() => {
+        if (window.innerWidth < SMALL_SCREEN) {
             setShowExpenses(false);
         }
     });
@@ -673,18 +711,25 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
         </div>
     )
 
-    return (
-        <div className="absolute right-0 w-2/3 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+    const expenseHiddenBlock =
+        <div className="w-10 border-violet-900 bg-violet-950 md:bg-opacity-50 cursor-pointer"
+            onClick={() => setShowExpenses(true)}>
+            <div className="[writing-mode:vertical-lr] py-5 px-2">Expenses</div>
+        </div>
+
+    var expenseShowBlock =
+        <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
-                <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
-                    onClick={() => setShowExpenses(false)} >
-                    {"<"}
-                </div>
                 <div className="p-2 flex-grow rounded hover:bg-metal hover:cursor-pointer text-center"
                     onClick={toggleAddingExpense}>
                     Add an Expense
                 </div>
+                <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
+                    onClick={() => setShowExpenses(false)} >
+                    {">"}
+                </div>
+
             </div>
             <div className="border-b border-violet-800 mb-2"></div>
             <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
@@ -694,7 +739,7 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
             <div>
                 <div className="flex justify-between">
                     <div>Total Banked:</div>
-                    <div>{"$" + (project.time / 3600 * project.price).toFixed(2)}</div>
+                    <div>{"$" + (project.time / 3600 * project.rate).toFixed(2)}</div>
                 </div>
                 <div className="flex justify-between">
                     <div>Total Expenses:</div>
@@ -706,7 +751,13 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
                 </div>
             </div>
         </div>
-    )
+
+    if (showExpenses) {
+        return (expenseShowBlock)
+    }
+    else {
+        return (expenseHiddenBlock)
+    }
 }
 
 
