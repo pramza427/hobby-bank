@@ -1,7 +1,7 @@
 'use client'
 import { randomInt } from 'crypto';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStopwatch } from 'react-timer-hook';
 import { Tooltip } from 'react-tooltip';
 import { useClickAway } from '@uidotdev/usehooks';
@@ -51,6 +51,24 @@ function calcBankAfterExpenses(hobbie: Hobbie) {
     return totalBank.toFixed(2)
 }
 
+// ------- Local Storage -------
+
+function saveLocal(hobbies: Array<Hobbie>) {
+    window.localStorage.setItem("hobbies", Convert.hobbieToJson(hobbies))
+    console.log("Saved to local")
+}
+
+function loadLocal(setHobbies: Function, setCurrentHobbieID: Function) {
+    const json = window.localStorage.getItem("hobbies")
+    const hobbies = json ? Convert.toHobbie(json) : []
+    setHobbies(hobbies);
+    if (hobbies) {
+        setCurrentHobbieID(hobbies[0].id);
+    }
+}
+
+// ------- File Storage -------
+
 const saveFile = async (blob: any) => {
     const a = document.createElement('a');
     a.download = 'hobbie-list.txt';
@@ -93,9 +111,13 @@ export default function Home() {
 
     const [currentHobbieID, setCurrentHobbieID] = useState(0);
     const [currentProjectID, setCurrentProjectID] = useState(0);
-    const [hobbies, setHobbies] = useState([]);
+    const [hobbies, setHobbies] = useState(Array<Hobbie>);
     const [showExpenses, setShowExpenses] = useState(false);
 
+    useEffect(() => {
+        loadLocal(setHobbies, setCurrentHobbieID);
+        return
+    }, [setHobbies, setCurrentHobbieID])
 
     function getCurrentHobbie() {
         return hobbies.find((hobbie: any) => hobbie.id == currentHobbieID)
@@ -130,7 +152,7 @@ function HobbieButton({ currentHobbieID, setCurrentHobbieID, hobbie, allHobbies,
         if (window.confirm("Delete " + hobbie.title + "?")) {
             let filteredHobbies = allHobbies.filter((h: Hobbie) => h.id != hobbie.id);
             setHobbies(filteredHobbies);
-            window.localStorage.setItem("hobbies", JSON.stringify(filteredHobbies));
+            saveLocal(filteredHobbies);
         }
     }
     let totalTime = hobbie.projects.reduce((total: number, project: Project) => total + project.time, 0)
@@ -176,6 +198,11 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
     function toggleAddingHobbie() {
         setAddingHobbie(!addingHobbie);
     }
+
+    useEffect (() => {
+        console.log("Update Hobbies")
+    })
+
     let hobbieList;
     if (allHobbies.length != 0) {
         hobbieList = allHobbies.map((hobbie: Hobbie) =>
@@ -186,19 +213,6 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
     }
     else {
         <div />
-    }
-    function getCurrentHobbiesFromLocal() {
-
-        const json = window.localStorage.getItem("hobbies")
-
-        const hobbies = json ? Convert.toHobbie(json) : []
-
-        setHobbies(hobbies);
-
-        if (hobbies) {
-            setCurrentHobbieID(hobbies[0].id);
-        }
-
     }
 
     let hobbieForm = addingHobbie ? <AddHobbie toggleAddingHobbie={toggleAddingHobbie} currentHobbieID={currentHobbieID} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
@@ -225,7 +239,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
                 </div>
                 <div className="flex-grow border-b border-violet-900 mb-2"></div>
                 <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between "
-                    onClick={getCurrentHobbiesFromLocal}>
+                    onClick={() => loadLocal(setHobbies, setCurrentHobbieID)}>
                     Load from Local
                     <div className=" px-4" id="local-warning">
                         i
@@ -299,9 +313,10 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
 // -----------  Project Main Screen  -----------
 // ---------------------------------------------
 
-function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, showExpenses, setShowExpenses }:
+function ProjectDetails({ allHobbies, setHobbies, project, isRunning, startTiming, stopTiming, totalSeconds, setEditing, showExpenses, setShowExpenses }:
     {
         allHobbies: Array<Hobbie>,
+        setHobbies: Function,
         project: Project,
         isRunning: boolean,
         startTiming: Function,
@@ -320,7 +335,8 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
         if (isRunning) {
             stopTiming();
             project.time = totalSeconds;
-            window.localStorage.setItem("hobbies", JSON.stringify(allHobbies));
+            setHobbies([...allHobbies])
+            saveLocal(allHobbies)
         }
         else {
             startTiming();
@@ -361,9 +377,10 @@ function ProjectDetails({ allHobbies, project, isRunning, startTiming, stopTimin
 
 }
 
-function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectID, deleteProject, showExpenses, setShowExpenses }:
+function ProjectItem({ allHobbies, setHobbies, setCurrentProjectID, project, currentProjectID, deleteProject, showExpenses, setShowExpenses }:
     {
         allHobbies: Array<Hobbie>,
+        setHobbies: Function,
         setCurrentProjectID: Function,
         project: Project,
         currentProjectID: number,
@@ -392,6 +409,7 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
         setCurrentProjectID(project.id);
     }
     function editProject(formData: any) {
+        console.log(allHobbies)
         setEditing(false);
         project.title = formData.get("title") ?? project.title;
         project.rate = parseFloat(formData.get("rate")) ?? project.rate;
@@ -400,16 +418,18 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
         stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + newTime ?? 0)
         reset(stopwatchOffset, false);
         project.time = newTime;
+        setHobbies([...allHobbies])
+        saveLocal(allHobbies)
     }
 
     function deleteProjectView() {
         deleteProject(project.id);
-
         var elem = document.getElementById(project.id.toString());
         var listElem = document.getElementById("projectList")
         console.log(elem);
         setEditing(false);
         setCurrentProjectID(null);
+        saveLocal(allHobbies);
 
     }
     const handleFocus = (event: any) => event.target.select();
@@ -422,7 +442,7 @@ function ProjectItem({ allHobbies, setCurrentProjectID, project, currentProjectI
     let lowerSection;
     let timingClass = "";
     if (iscurrentProjectID) {
-        lowerSection = <ProjectDetails allHobbies={allHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
+        lowerSection = <ProjectDetails allHobbies={allHobbies} setHobbies={setHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
         selectedClass = "bg-violet-950 "
     }
     else {
@@ -514,7 +534,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setCurrentProje
                 id={project.id.toString()}
                 className="even:bg-violet-950 even:bg-opacity-30"
             >
-                <ProjectItem allHobbies={allHobbies} setCurrentProjectID={setCurrentProjectID} project={project} currentProjectID={currentProjectID} deleteProject={deleteProject} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
+                <ProjectItem allHobbies={allHobbies} setHobbies={setHobbies} setCurrentProjectID={setCurrentProjectID} project={project} currentProjectID={currentProjectID} deleteProject={deleteProject} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
             </div>)
     }
     else {
