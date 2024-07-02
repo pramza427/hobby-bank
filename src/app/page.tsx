@@ -157,7 +157,7 @@ function HobbieButton({ currentHobbieID, setCurrentHobbieID, hobbie, allHobbies,
         }
     }
     let totalTime = hobbie.projects.reduce((total: number, project: Project) => total + project.time, 0)
-    const isSelected = (currentHobbieID == hobbie.id) ? " bg-violet-900 bg-opacity-100 " : " hover:bg-metal "
+    const isSelected = (currentHobbieID == hobbie.id) ? " bg-indigo-900 bg-opacity-100 " : " hover:bg-metal "
     return (
         <div className={"group p-1 rounded hover:cursor-pointer " + isSelected}
             onClick={clickHandle} >
@@ -209,7 +209,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
     let hobbieList;
     if (allHobbies.length != 0) {
         hobbieList = allHobbies.map((hobbie: Hobbie) =>
-            <div className="border-b border-violet-900"
+            <div className="border-b border-indigo-900"
                 key={hobbie.id}>
                 <HobbieButton currentHobbieID={currentHobbieID} setCurrentHobbieID={setCurrentHobbieID} hobbie={hobbie} allHobbies={allHobbies} setHobbies={setHobbies} />
             </div>)
@@ -222,7 +222,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
 
     if (showHobbies) {
         return (
-            <div className="absolute h-full w-3/4 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/3 md:m-2 border border-violet-900 bg-violet-950 md:bg-opacity-70 flex flex-col md:rounded"
+            <div className="absolute h-full w-3/4 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/3 border-r border-indigo-900 bg-indigo-950 flex flex-col"
                 onClick={(event) => event.stopPropagation()}
                 ref={closeHobbiesRef}>
                 <div className="flex">
@@ -235,12 +235,12 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
                         Add a Hobbie
                     </div>
                 </div>
-                <div className="border-b border-violet-900 mt-2 mb-2"></div>
+                <div className="border-b border-indigo-900 mt-2 mb-2"></div>
                 {hobbieForm}
                 <div className="flex flex-col">
                     {hobbieList}
                 </div>
-                <div className="flex-grow border-b border-violet-900 mb-2"></div>
+                <div className="flex-grow border-b border-indigo-900 mb-2"></div>
                 <div className="mx-1 p-1 hover:cursor-pointer hover:bg-metal rounded flex justify-between "
                     onClick={() => loadLocal(setHobbies, setCurrentHobbieID)}>
                     Load from Local
@@ -266,7 +266,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
     }
     else {
         return (
-            <div className="w-10 border-violet-900 bg-violet-950 md:bg-opacity-50 cursor-pointer"
+            <div className="w-10 border-r border-indigo-900 bg-indigo-950 cursor-pointer"
                 onClick={() => setShowHobbies(true)}>
                 <div className="[writing-mode:vertical-lr] py-5 px-2">Hobbies</div>
             </div>
@@ -291,7 +291,7 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
     }
 
     return (
-        <div className="bg-emerald-950 border border-emerald-800 rounded mb-2"
+        <div className="bg-violet-950 border border-violet-800 rounded mb-2"
             onClick={() => toggleAddingHobbie()}
         >
             <div onClick={event => event.stopPropagation()}
@@ -301,7 +301,7 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
                         <div>
                             Name of Hobbie
                         </div>
-                        <input className="bg-teal-900 border border-teal-800 active:border-blue-900" name="name" required></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50" name="name" required></input>
                     </div>
 
                     <button type="button" className="m-3 p-1 rounded hover:bg-metal" onClick={() => toggleAddingHobbie()} >Cancel</button>
@@ -447,7 +447,7 @@ function ProjectItem({ allHobbies, setHobbies, setCurrentProjectID, project, cur
     let timingClass = "";
     if (iscurrentProjectID) {
         lowerSection = <ProjectDetails allHobbies={allHobbies} setHobbies={setHobbies} project={project} isRunning={isRunning} startTiming={start} stopTiming={pause} totalSeconds={totalSeconds} setEditing={setEditing} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
-        selectedClass = "bg-violet-950 "
+        selectedClass = "bg-indigo-950 "
     }
     else {
         lowerSection = <div></div>
@@ -457,7 +457,7 @@ function ProjectItem({ allHobbies, setHobbies, setCurrentProjectID, project, cur
 
     if (editing) {
         return (
-            <div className="p-2 bg-violet-950" ref={editingRef}>
+            <div className="p-2 bg-indigo-950" ref={editingRef}>
                 <form action={editProject}>
                     <div className="grid grid-cols-4">
                         <input className="bg-slate-800 border border-gray-700" name="title" defaultValue={project.title} onClick={handleFocus}></input>
@@ -537,7 +537,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setCurrentProje
             <div
                 key={project.id}
                 id={project.id.toString()}
-                className="even:bg-violet-950 even:bg-opacity-30"
+                className="even:bg-indigo-950 even:bg-opacity-30"
             >
                 <ProjectItem allHobbies={allHobbies} setHobbies={setHobbies} setCurrentProjectID={setCurrentProjectID} project={project} currentProjectID={currentProjectID} deleteProject={deleteProject} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
             </div>)
@@ -548,7 +548,7 @@ function ProjectList({ allHobbies, setHobbies, currentProjectID, setCurrentProje
 
     let projectForm = addingProject ? <AddProject toggleAddingProject={toggleAddingProject} currentHobbie={currentHobbie} allHobbies={allHobbies} setHobbies={setHobbies} /> : <div />
     return (
-        <div className="flex w-full bg-violet-950 md:m-2 md:rounded bg-opacity-50 border border-violet-950">
+        <div className="flex w-full bg-indigo-950 bg-opacity-50 border-indigo-900">
             <div className="w-full m-2 relative ">
                 <div className="flex justify-center ">
                     <div className="text-2xl p-3"> Projects </div>
@@ -611,22 +611,22 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
         toggleAddingProject()
     }
     return (
-        <div className="bg-emerald-950 border border-emerald-800 rounded p-2">
+        <div className="bg-violet-950 border border-violet-800 rounded p-2">
             <form action={submitNewProject} autoComplete="off">
                 <div className="grid grid-cols-4">
-                    <input className="bg-teal-900 border border-teal-800" name="title" required></input>
+                    <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50" name="title" required></input>
                     <div className="flex justify-end">
                         $
-                        <input className="bg-teal-900 border border-teal-800 text-right w-16" name="rate" placeholder="0.00" required></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50 text-right w-16" name="rate" placeholder="0.00" required></input>
                     </div>
                     <div className="flex justify-end">
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="days" placeholder="d"></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50 text-right w-8" name="days" placeholder="d"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="hours" placeholder="h"></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50 text-right w-8" name="hours" placeholder="h"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="minutes" placeholder="m"></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50 text-right w-8" name="minutes" placeholder="m"></input>
                         :
-                        <input className="bg-teal-900 border border-teal-800 text-right w-8" name="seconds" placeholder="s"></input>
+                        <input className="bg-indigo-900 border border-indigo-800 bg-opacity-50 text-right w-8" name="seconds" placeholder="s"></input>
                     </div>
                     <div></div>
                 </div>
@@ -679,16 +679,16 @@ function ExpenseForm({ allHobbies, setHobbies, addingExpense, setAddingExpense, 
 
     if (addingExpense) {
         return (
-            <div className="bg-emerald-950 border border-emerald-800 rounded p-2 mb-2">
+            <div className="bg-violet-950 border border-violet-800 rounded p-2 mb-2">
                 <form action={submitNewExpense} autoComplete="off">
                     <div className="grid grid-cols-2">
                         <div>
                             <div>Item</div>
-                            <input name="item" className="w-40 bg-teal-900 border border-teal-800" required></input>
+                            <input name="item" className="w-40 bg-indigo-900 border border-indigo-800 bg-opacity-50" required></input>
                         </div>
                         <div className="text-right">
                             <div>Cost</div>
-                            <input name="cost" className="w-16 bg-teal-900 border border-teal-800" required></input>
+                            <input name="cost" className="w-16 bg-indigo-900 border border-indigo-800 bg-opacity-50" required></input>
                         </div>
                         <button className="m-3 p-1 hover:bg-metal rounded" type="button" onClick={() => setAddingExpense(false)}>Cancel</button>
                         <button className="m-3 p-1 hover:bg-metal rounded" type="submit">Add</button>
@@ -736,7 +736,7 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
 
 
     const expensesList = expenses?.map((expense: any) =>
-        <div className="group flex justify-between odd:bg-violet-900 odd:bg-opacity-50 px-2" key={expense.id}>
+        <div className="group flex justify-between odd:bg-indigo-900 odd:bg-opacity-50 px-2" key={expense.id}>
             <div>
                 {expense.title}
             </div>
@@ -751,13 +751,13 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
     )
 
     const expenseHiddenBlock =
-        <div className="w-10 border-violet-900 bg-violet-950 md:bg-opacity-50 cursor-pointer"
+        <div className="w-10 border-l border-indigo-900 bg-indigo-950 cursor-pointer"
             onClick={() => setShowExpenses(true)}>
             <div className="[writing-mode:vertical-lr] py-5 px-2">Expenses</div>
         </div>
 
     var expenseShowBlock = project == null
-        ? <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+        ? <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="disabled p-2 flex-grow rounded hover:bg-metal hover:cursor-not-allowed opacity-50 text-center">
@@ -769,12 +769,12 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
                 </div>
 
             </div>
-            <div className="border-b border-violet-800 mb-2"></div>
-            <div className="flex-grow mb-2 border-b border-violet-800">
+            <div className="border-b border-indigo-900 mb-2"></div>
+            <div className="flex-grow mb-2 border-b border-indigo-900">
             </div>
         </div>
 
-        : <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+        : <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="p-2 flex-grow rounded hover:bg-metal hover:cursor-pointer text-center"
@@ -787,9 +787,9 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
                 </div>
 
             </div>
-            <div className="border-b border-violet-800 mb-2"></div>
+            <div className="border-b border-indigo-900 mb-2"></div>
             <ExpenseForm allHobbies={allHobbies} setHobbies={setHobbies} addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
-            <div className="flex-grow mb-2 border-b border-violet-800">
+            <div className="flex-grow mb-2 border-b border-indigo-900">
                 {expensesList}
             </div>
             <div>
