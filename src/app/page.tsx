@@ -1,6 +1,4 @@
 'use client'
-import { randomInt } from 'crypto';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useStopwatch } from 'react-timer-hook';
 import { Tooltip } from 'react-tooltip';
@@ -50,6 +48,9 @@ function calcBankAfterExpenses(hobbie: Hobbie) {
     })
     return totalBank.toFixed(2)
 }
+// ------- Dark Mode -----------
+
+
 
 // ------- Local Storage -------
 
@@ -127,7 +128,7 @@ export default function Home() {
         <main className="flex min-h-screen text-sm md:text-lg overflow-hidden">
             <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setCurrentHobbieID={setCurrentHobbieID} />
             <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setCurrentProjectID={setCurrentProjectID} getCurrentHobbie={getCurrentHobbie} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
-            <ExpenseList getCurrentHobbie={getCurrentHobbie} currentProjectID={currentProjectID} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
+            <ExpenseList allHobbies={hobbies} setHobbies={setHobbies} getCurrentHobbie={getCurrentHobbie} currentProjectID={currentProjectID} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
         </main>
     )
 }
@@ -166,7 +167,9 @@ function HobbieButton({ currentHobbieID, setCurrentHobbieID, hobbie, allHobbies,
             </div>
 
             <div className="flex justify-between w-full">
-                <div className="hidden group-hover:block hover:bg-red-900 rounded px-2" onClick={deleteHobbie}>DEL</div>
+                <div className="hidden group-hover:block hover:bg-red-900 rounded px-2" onClick={deleteHobbie}>
+                    <i className="fa-solid fa-trash"></i>
+                </div>
                 <div className="text-right flex-grow">{convertTotalTime(totalTime)}</div>
             </div>
 
@@ -199,7 +202,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
         setAddingHobbie(!addingHobbie);
     }
 
-    useEffect (() => {
+    useEffect(() => {
         console.log("Update Hobbies")
     })
 
@@ -246,7 +249,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
                     </div>
                     <Tooltip anchorSelect="#local-warning" >
                         <div className="z-50">
-                            Changes will be automatically saved to local, but data can be lost if cache is cleared.
+                            Changes will be automatically saved locally, but data can be lost if cache is cleared.
                         </div>
                     </Tooltip>
                 </div>
@@ -283,6 +286,7 @@ function AddHobbie({ toggleAddingHobbie, currentHobbieID, allHobbies, setHobbies
         }
         allHobbies.unshift(newHobbie)
         setHobbies(allHobbies)
+        saveLocal(allHobbies)
         toggleAddingHobbie()
     }
 
@@ -474,14 +478,15 @@ function ProjectItem({ allHobbies, setHobbies, setCurrentProjectID, project, cur
                     </div>
                     <div className="flex justify-center">
                         <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
-                            Delete
-                        </button>
-                        <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
-                            Done
+                            <i className="fa-solid fa-trash"></i>
                         </button>
                         <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={() => setEditing(false)}>
                             Cancel
                         </button>
+                        <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
+                            Done
+                        </button>
+
                     </div>
                 </form>
 
@@ -602,7 +607,7 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
         }
         currentHobbie.projects.push(newProject)
         console.log(newProject)
-        setHobbies(allHobbies)
+        setHobbies([...allHobbies])
         toggleAddingProject()
     }
     return (
@@ -644,11 +649,13 @@ function AddProject({ toggleAddingProject, currentHobbie, allHobbies, setHobbies
 // -----------  Expenses Sidebar  -----------
 // ------------------------------------------
 
-function ExpenseForm({ addingExpense, setAddingExpense, project }:
+function ExpenseForm({ allHobbies, setHobbies, addingExpense, setAddingExpense, project }:
     {
+        allHobbies: Array<Hobbie>,
+        setHobbies: Function,
         addingExpense: boolean,
         setAddingExpense: Function,
-        project: any
+        project: Project
     }
 ) {
     function submitNewExpense(formData: any) {
@@ -663,8 +670,11 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }:
         }
         else {
             project.expenses.unshift(newExpense)
+            project.expenses = project.expenses.sort((a, b) => a.title > b.title ? 1 : -1)
         }
         setAddingExpense(false)
+        setHobbies([...allHobbies])
+        saveLocal(allHobbies)
     }
 
     if (addingExpense) {
@@ -680,22 +690,22 @@ function ExpenseForm({ addingExpense, setAddingExpense, project }:
                             <div>Cost</div>
                             <input name="cost" className="w-16 bg-teal-900 border border-teal-800" required></input>
                         </div>
-                        <button className="m-3 p-1 hover:bg-metal rounded" onClick={() => setAddingExpense(false)}>Cancel</button>
+                        <button className="m-3 p-1 hover:bg-metal rounded" type="button" onClick={() => setAddingExpense(false)}>Cancel</button>
                         <button className="m-3 p-1 hover:bg-metal rounded" type="submit">Add</button>
                     </div>
                 </form >
             </div>
-
         )
     }
     else {
         return (<div />)
     }
-
 }
 
-function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShowExpenses }:
+function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectID, showExpenses, setShowExpenses }:
     {
+        allHobbies: Array<Hobbie>,
+        setHobbies: Function,
         getCurrentHobbie: Function,
         currentProjectID: number,
         showExpenses: boolean,
@@ -712,22 +722,31 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
         }
     });
 
+    function deleteExpense(expenseID: number) {
+        project.expenses = project.expenses.filter((e: Expense) => e.id != expenseID);
+        setHobbies([...allHobbies])
+        saveLocal(allHobbies);
+    }
+
     function toggleAddingExpense() {
         setAddingExpense(!addingExpense);
     }
 
-    if (project == null) { return (<div />) }
-    const expenses = project?.expenses;
+    const expenses = project?.expenses ?? [];
 
 
     const expensesList = expenses?.map((expense: any) =>
-        <div className="flex justify-between odd:bg-violet-900 odd:bg-opacity-50 px-2" key={expense.key}>
+        <div className="group flex justify-between odd:bg-violet-900 odd:bg-opacity-50 px-2" key={expense.id}>
             <div>
                 {expense.title}
             </div>
-            <div>
+            <div className="flex">
                 ${parseFloat(expense.cost).toFixed(2)}
+                <div className="hidden group-hover:block hover:bg-red-900 rounded px-2 ml-2 cursor-pointer" onClick={() => deleteExpense(expense.id)}>
+                    <i className="fa-solid fa-trash"></i>
+                </div>
             </div>
+
         </div>
     )
 
@@ -737,8 +756,25 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
             <div className="[writing-mode:vertical-lr] py-5 px-2">Expenses</div>
         </div>
 
-    var expenseShowBlock =
-        <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+    var expenseShowBlock = project == null
+        ? <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
+            ref={closeExpensesRef}>
+            <div className="flex mb-2">
+                <div className="disabled p-2 flex-grow rounded hover:bg-metal hover:cursor-not-allowed opacity-50 text-center">
+                    Add an Expense
+                </div>
+                <div className="p-2 px-4 inline-block rounded hover:bg-metal hover:cursor-pointer text-center"
+                    onClick={() => setShowExpenses(false)} >
+                    {">"}
+                </div>
+
+            </div>
+            <div className="border-b border-violet-800 mb-2"></div>
+            <div className="flex-grow mb-2 border-b border-violet-800">
+            </div>
+        </div>
+
+        : <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 md:m-2 flex flex-col bg-violet-950 rounded-l md:rounded border-l md:border border-violet-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="p-2 flex-grow rounded hover:bg-metal hover:cursor-pointer text-center"
@@ -752,7 +788,7 @@ function ExpenseList({ getCurrentHobbie, currentProjectID, showExpenses, setShow
 
             </div>
             <div className="border-b border-violet-800 mb-2"></div>
-            <ExpenseForm addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
+            <ExpenseForm allHobbies={allHobbies} setHobbies={setHobbies} addingExpense={addingExpense} setAddingExpense={setAddingExpense} project={project} />
             <div className="flex-grow mb-2 border-b border-violet-800">
                 {expensesList}
             </div>
