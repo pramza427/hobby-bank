@@ -125,7 +125,7 @@ export default function Home() {
     }
 
     return (
-        <main className="flex min-h-screen text-sm md:text-lg overflow-hidden">
+        <main className="flex min-h-screen text-xs md:text-lg overflow-hidden">
             <HobbieList allHobbies={hobbies} setHobbies={setHobbies} currentHobbieID={currentHobbieID} setCurrentHobbieID={setCurrentHobbieID} />
             <ProjectList allHobbies={hobbies} setHobbies={setHobbies} currentProjectID={currentProjectID} setCurrentProjectID={setCurrentProjectID} getCurrentHobbie={getCurrentHobbie} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
             <ExpenseList allHobbies={hobbies} setHobbies={setHobbies} getCurrentHobbie={getCurrentHobbie} currentProjectID={currentProjectID} showExpenses={showExpenses} setShowExpenses={setShowExpenses} />
@@ -222,7 +222,7 @@ function HobbieList({ allHobbies, setHobbies, currentHobbieID, setCurrentHobbieI
 
     if (showHobbies) {
         return (
-            <div className="absolute h-full w-3/4 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/3 border-r border-indigo-900 bg-indigo-950 flex flex-col"
+            <div className="absolute h-full w-1/2 z-10 p-2 rounded-r md:relative md:h-auto md:w-1/3 border-r border-indigo-900 bg-indigo-950 flex flex-col"
                 onClick={(event) => event.stopPropagation()}
                 ref={closeHobbiesRef}>
                 <div className="flex">
@@ -349,32 +349,28 @@ function ProjectDetails({ allHobbies, setHobbies, project, isRunning, startTimin
     var timerText = isRunning ? "Stop Timer" : "Start Timer"
     if (isRunning) {
         return (
-            <div className="relative flex justify-center">
-
+            <div className="flex">
                 <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
                     onClick={toggleTimer}>
                     {timerText}
                 </div>
-                <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                    onClick={toggleExpenses}>
-                    {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
             </div>
         )
     }
     else {
         return (
-            <div className="relative flex justify-center">
-                <div className="absolute left-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                    onClick={() => setEditing(true)}>
-                    Edit
-                </div>
+            <div className="flex justify-between">
                 <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
                     onClick={toggleTimer}>
                     {timerText}
                 </div>
-                <div className="absolute right-0 mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
-                    onClick={toggleExpenses}>
-                    {showExpenses ? "<- Expenses" : "Expenses ->"}</div>
+                <div className="mx-3 my-2 p-2 rounded-lg text-center hover:cursor-pointer hover:bg-metal"
+                    onClick={() => setEditing(true)}>
+                    <div className="flex items-center">
+                        <i className="fa-solid fa-pen-to-square mr-2"></i>
+                        Edit
+                    </div>
+                </div>
             </div>
         )
     }
@@ -477,16 +473,15 @@ function ProjectItem({ allHobbies, setHobbies, setCurrentProjectID, project, cur
                         <div className="text-right">{"$" + calculateBankAfterExpenses(project, totalSeconds)}</div>
                     </div>
                     <div className="flex justify-center">
-                        <button className="m-3 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
-                            <i className="fa-solid fa-trash"></i>
-                        </button>
                         <button className="m-3 p-2 rounded hover:bg-metal hover:cursor-pointer " type="button" onClick={() => setEditing(false)}>
                             Cancel
                         </button>
                         <button className="m-3 p-2 rounded hover:bg-green-800 hover:cursor-pointer " type="submit">
                             Done
                         </button>
-
+                        <button className="m-3 ml-5 p-2 rounded hover:bg-red-800 hover:cursor-pointer" type="button" onClick={deleteProjectView}>
+                            <i className="fa-solid fa-trash"></i>
+                        </button>
                     </div>
                 </form>
 
@@ -757,7 +752,7 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
         </div>
 
     var expenseShowBlock = project == null
-        ? <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
+        ? <div className="absolute right-0 w-1/2 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="disabled p-2 flex-grow rounded hover:bg-metal hover:cursor-not-allowed opacity-50 text-center">
@@ -774,7 +769,7 @@ function ExpenseList({ allHobbies, setHobbies, getCurrentHobbie, currentProjectI
             </div>
         </div>
 
-        : <div className="absolute right-0 w-3/4 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
+        : <div className="absolute right-0 w-1/2 h-full md:h-auto md:relative md:w-1/3 p-2 flex flex-col bg-indigo-950 border-l border-indigo-900 "
             ref={closeExpensesRef}>
             <div className="flex mb-2">
                 <div className="p-2 flex-grow rounded hover:bg-metal hover:cursor-pointer text-center"
